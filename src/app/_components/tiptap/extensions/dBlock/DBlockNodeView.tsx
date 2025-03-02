@@ -28,18 +28,16 @@ export const DBlockNodeView: React.FC<NodeViewProps> = ({
       ],
     });
   };
+
   return (
-    <NodeViewWrapper as="div" className="flex group relative">
+    <NodeViewWrapper as="div" className="group relative">
+      {/* コントロールバーを絶対位置で配置 */}
       {editor.isEditable && (
-        <>
-          <HStack
-            position="relative"
-            marginX="sm"
-            opacity="0"
-            transitionDuration="200"
-            className="group-hover:opacity-100"
-            aria-label="left-menu"
-          >
+        <div
+          className="absolute left-0 top-0 bottom-0 w-12 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+          style={{ transform: "translateX(-130%)" }} // 左側に配置
+        >
+          <HStack>
             <IconButton
               variant="ghost"
               icon={<PlusIcon fontSize="lg" />}
@@ -58,9 +56,10 @@ export const DBlockNodeView: React.FC<NodeViewProps> = ({
               size="xs"
             />
           </HStack>
-        </>
+        </div>
       )}
 
+      {/* メインコンテンツは同じ位置を維持 */}
       <NodeViewContent
         className={`node-view-content w-full ${isTable ? "ml-6" : ""}`}
       />
