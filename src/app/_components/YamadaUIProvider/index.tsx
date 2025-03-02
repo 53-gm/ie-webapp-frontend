@@ -8,7 +8,7 @@ import {
   UIProvider,
 } from "@yamada-ui/react";
 
-const Providers = ({ children }: { children: React.ReactNode }) => {
+const YamadaUIProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <>
       <ColorModeScript
@@ -32,4 +32,4 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-export default Providers;
+export default YamadaUIProvider;

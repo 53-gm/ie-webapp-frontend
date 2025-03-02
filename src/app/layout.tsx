@@ -4,8 +4,7 @@ import { Center, VStack } from "@yamada-ui/react";
 import type { Metadata } from "next";
 import { Zen_Kaku_Gothic_New } from "next/font/google";
 import { ReactNode } from "react";
-import { ErrorBoundary } from "./_components/ErrorBoundary";
-import Providers from "./_components/Providers";
+import YamadaUIProvider from "./_components/YamadaUIProvider";
 import "./globals.css";
 
 const ZenKakuGothicNewFont = Zen_Kaku_Gothic_New({
@@ -53,26 +52,24 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="ja">
       <body className={ZenKakuGothicNewFont.className}>
-        <ErrorBoundary>
-          <Providers>
-            <DesktopNav />
-            <VStack px={{ base: "2xl", sm: "xs" }} minH="100vh">
-              <Header />
-              <Center as="main" w="full">
-                <VStack
-                  w="full"
-                  gap={{ base: "lg", md: "md" }}
-                  py="lg"
-                  px={{ base: "lg", md: "md" }}
-                  maxW="8xl"
-                  alignItems="center"
-                >
-                  {children}
-                </VStack>
-              </Center>
-            </VStack>
-          </Providers>
-        </ErrorBoundary>
+        <YamadaUIProvider>
+          <DesktopNav />
+          <VStack px={{ base: "2xl", sm: "xs" }} minH="100vh">
+            <Header />
+            <Center as="main" w="full">
+              <VStack
+                w="full"
+                gap={{ base: "lg", md: "md" }}
+                py="lg"
+                px={{ base: "lg", md: "md" }}
+                maxW="8xl"
+                alignItems="center"
+              >
+                {children}
+              </VStack>
+            </Center>
+          </VStack>
+        </YamadaUIProvider>
       </body>
     </html>
   );
