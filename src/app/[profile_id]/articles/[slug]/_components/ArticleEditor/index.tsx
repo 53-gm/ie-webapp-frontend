@@ -1,13 +1,8 @@
 "use client";
 
 import { updateArticle } from "@/actions";
-import { getExtensions } from "@/app/_components/tiptap/extensions";
-import {
-  CustomBubbleMenu,
-  LinkBubbleMenu,
-} from "@/app/_components/tiptap/menus";
-import { notitapEditorClass } from "@/app/_components/tiptap/proseClassString";
-import "@/app/_components/tiptap/styles/tiptap.scss";
+import { getExtensions } from "@/lib/tiptap/extensions";
+import { CustomBubbleMenu, LinkBubbleMenu } from "@/lib/tiptap/menus";
 import { Article } from "@/types/api";
 import { format } from "@formkit/tempo";
 import { EditorContent, useEditor } from "@tiptap/react";
@@ -56,14 +51,14 @@ export default function ArticleEditor({
   });
   const router = useRouter();
 
-  // Tiptapエディタを初期化
   const editor = useEditor({
-    extensions: getExtensions({ openLinkModal: () => {} }),
-    content: null, // 初期値はnull
-    editable: false, // 初期状態は閲覧モード
+    extensions: getExtensions(),
+    content: null,
+    editable: false,
+    immediatelyRender: false,
     editorProps: {
       attributes: {
-        class: `${notitapEditorClass} focus:outline-none w-full`,
+        class: "focus:outline-none w-full",
         spellcheck: "false",
       },
     },
@@ -90,10 +85,10 @@ export default function ArticleEditor({
   }, [editor, isEditMode]);
 
   // 日付フォーマット
-  const formattedDate = format(article.created_at, "short");
+  const formattedDate = format(article.created_at, "short", "ja");
   const formattedUpdateDate =
     article.updated_at !== article.created_at
-      ? format(article.updated_at, "short")
+      ? format(article.updated_at, "short", "ja")
       : null;
 
   // 編集モード切り替え
@@ -270,7 +265,7 @@ export default function ArticleEditor({
       </Box>
 
       {/* コンテンツ部分 */}
-      <Box as="article" py={8} w="full">
+      <Box as="article" py={8} w="full" minH="100vh">
         <Box>
           <EditorContent editor={editor} />
           {isEditMode && (

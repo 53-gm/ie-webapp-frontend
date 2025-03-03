@@ -3,15 +3,12 @@ import { EditorContent, useEditor } from "@tiptap/react";
 import { useEffect, useState } from "react";
 import "tippy.js/animations/shift-toward-subtle.css";
 
-import { getExtensions } from "@/app/_components/tiptap/extensions";
-import {
-  CustomBubbleMenu,
-  LinkBubbleMenu,
-} from "@/app/_components/tiptap/menus";
-import { notitapEditorClass } from "@/app/_components/tiptap/proseClassString";
 import "@/app/_components/tiptap/styles/tiptap.scss";
 import { postArticle } from "@/app/_services/postArticle";
 import { CreateArticle } from "@/app/_services/type";
+import { getExtensions } from "@/lib/tiptap/extensions";
+import { CustomBubbleMenu, LinkBubbleMenu } from "@/lib/tiptap/menus";
+import { notitapEditorClass } from "@/lib/tiptap/proseClassString";
 import {
   Button,
   FormControl,

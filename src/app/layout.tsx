@@ -1,5 +1,6 @@
 import DesktopNav from "@/app/_components/DesktopNav";
 import Header from "@/app/_components/Header";
+import "@/lib/tiptap/styles/tiptap.scss";
 import { Center, VStack } from "@yamada-ui/react";
 import type { Metadata } from "next";
 import { Zen_Kaku_Gothic_New } from "next/font/google";

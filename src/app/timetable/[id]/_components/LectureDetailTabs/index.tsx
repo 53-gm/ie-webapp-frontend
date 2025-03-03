@@ -1,7 +1,12 @@
 "use client";
 
 import { deleteRegistration } from "@/actions/lectures";
-import { createTask, updateTaskStatus } from "@/actions/tasks";
+import {
+  createTask,
+  deleteTask,
+  updateTask,
+  updateTaskStatus,
+} from "@/actions/tasks";
 import { Registration, Task } from "@/types/api";
 import {
   Tab,
@@ -69,7 +74,6 @@ export default function LectureDetailTabs({
 
       if (result.success) {
         // ローカルの状態を更新
-
         if (result.data) {
           setLocalTasks((prev) => [...prev, result.data]);
 
@@ -83,6 +87,101 @@ export default function LectureDetailTabs({
         return true;
       } else {
         throw new Error(result.error?.error.message || "作成に失敗しました");
+      }
+    } catch (error: any) {
+      notice({
+        title: "エラー",
+        description: error.message,
+        status: "error",
+      });
+      return false;
+    }
+  };
+
+  // タスク編集
+  const handleUpdateTask = async (taskId: string, taskData: any) => {
+    try {
+      const result = await updateTask(taskId, taskData);
+
+      if (result.success && result.data) {
+        // ローカルの状態を更新
+        setLocalTasks((prev) =>
+          prev.map((task) => (task.id === taskId ? result.data : task))
+        );
+
+        notice({
+          title: "タスク更新",
+          description: "タスクを更新しました",
+          status: "success",
+        });
+        return true;
+      } else {
+        throw new Error(result.error?.error.message || "更新に失敗しました");
+      }
+    } catch (error: any) {
+      notice({
+        title: "エラー",
+        description: error.message,
+        status: "error",
+      });
+      return false;
+    }
+  };
+
+  // タスク削除
+  const handleDeleteTask = async (taskId: string) => {
+    try {
+      const result = await deleteTask(taskId);
+
+      if (result.success) {
+        // ローカルの状態を更新
+        setLocalTasks((prev) => prev.filter((task) => task.id !== taskId));
+
+        notice({
+          title: "タスク削除",
+          description: "タスクを削除しました",
+          status: "success",
+        });
+        return true;
+      } else {
+        throw new Error(result.error?.error.message || "削除に失敗しました");
+      }
+    } catch (error: any) {
+      notice({
+        title: "エラー",
+        description: error.message,
+        status: "error",
+      });
+      return false;
+    }
+  };
+
+  // 完了タスクの一括削除
+  const handleDeleteCompletedTasks = async () => {
+    try {
+      const completedTasks = localTasks.filter((task) => task.status === 2);
+      let successCount = 0;
+
+      // 各タスクを順番に削除
+      for (const task of completedTasks) {
+        const result = await deleteTask(task.id);
+        if (result.success) {
+          successCount++;
+        }
+      }
+
+      // 成功した場合、ローカルの状態を更新
+      if (successCount > 0) {
+        setLocalTasks((prev) => prev.filter((task) => task.status !== 2));
+
+        notice({
+          title: "一括削除",
+          description: `${successCount}件の完了タスクを削除しました`,
+          status: "success",
+        });
+        return true;
+      } else {
+        return false;
       }
     } catch (error: any) {
       notice({
@@ -139,6 +238,9 @@ export default function LectureDetailTabs({
             tasks={localTasks}
             onUpdateStatus={handleUpdateTaskStatus}
             onCreateTask={handleCreateTask}
+            onUpdateTask={handleUpdateTask}
+            onDeleteTask={handleDeleteTask}
+            onDeleteCompletedTasks={handleDeleteCompletedTasks}
           />
         </TabPanel>
 

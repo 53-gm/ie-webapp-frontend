@@ -10,11 +10,11 @@ interface ArticlesListProps {
 
 export default function ArticlesList({
   articles,
-  title = "記事一覧",
+  title = "",
   emptyMessage = "記事がありません",
 }: ArticlesListProps) {
   return (
-    <Box as="section" py={8}>
+    <Box as="section" py={8} w="full">
       {title && (
         <Heading as="h2" size="lg" mb={6}>
           {title}
@@ -24,13 +24,14 @@ export default function ArticlesList({
       {articles.length > 0 ? (
         <Grid
           templateColumns={{
-            base: "repeat(1, 1fr)",
-            md: "repeat(2, 1fr)",
+            base: "repeat(3, 1fr)",
+            md: "repeat(1, 1fr)",
           }}
-          gap={4}
+          gap="md"
+          w="full"
         >
           {articles.map((article) => (
-            <GridItem key={article.slug}>
+            <GridItem key={article.slug} w="full">
               <ArticleCard article={article} />
             </GridItem>
           ))}

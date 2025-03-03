@@ -10,6 +10,7 @@ import {
   Heading3Icon,
   ListCollapseIcon,
   ListOrderedIcon,
+  QuoteIcon,
 } from "@yamada-ui/lucide";
 import { ReactElement } from "react";
 import { stopPrevent } from "../../utils";
@@ -84,21 +85,15 @@ const SlashMenuItems: Partial<SlashMenuItem>[] = [
     icon: <ListCollapseIcon />,
     shortcut: "- L",
   },
-  // {
-  //   title: "Task List",
-  //   command: ({ editor, range }) => {
-  //     editor.chain().focus().deleteRange(range).toggleTaskList().run();
-  //   },
-  //   iconClass: "i-ri-list-check-2",
-  // },
-  // {
-  //   title: "Blockquote",
-  //   command: ({ editor, range }) => {
-  //     editor.chain().focus().deleteRange(range).setBlockquote().run();
-  //   },
-  //   iconClass: "i-ri-double-quotes-l",
-  //   shortcut: ">",
-  // },
+
+  {
+    title: "Blockquote",
+    command: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).setBlockquote().run();
+    },
+    icon: <QuoteIcon />,
+    shortcut: ">",
+  },
   // {
   //   title: "Code Block",
   //   command: ({ editor, range }) => {
