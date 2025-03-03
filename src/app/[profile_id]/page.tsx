@@ -38,7 +38,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   const articlesCount = Array.isArray(articlesData) ? articlesData.length : 0;
 
   return (
-    <Box as="main">
+    <Box w="full" rounded="md">
       {/* プロフィールヘッダー */}
       <ProfileHeader profile={profileData} articlesCount={articlesCount} />
 

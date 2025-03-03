@@ -73,7 +73,6 @@ const DesktopNav = () => {
             />
           </Link>
         </Flex>
-
         <NavItem label="ホーム" icon={<HouseIcon fontSize="2xl" />} url="/" />
 
         <NavItem

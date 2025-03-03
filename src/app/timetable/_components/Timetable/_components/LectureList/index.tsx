@@ -1,6 +1,6 @@
 // LectureList.tsx
 import { postRegistLecture } from "@/app/_services/postRegistLecture";
-import { Lecture } from "@/app/_services/type";
+import { Lecture } from "@/types/api";
 import {
   Box,
   Button,

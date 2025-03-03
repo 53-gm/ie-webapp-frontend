@@ -18,3 +18,5 @@ export const createLectureSchema = z.object({
   eval_method: z.string().optional(),
   biko: z.string().optional(),
 });
+
+export type createLectureSchema = z.infer<typeof createLectureSchema>;

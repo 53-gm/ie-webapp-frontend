@@ -62,7 +62,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 gap={{ base: "lg", md: "md" }}
                 py="lg"
                 px={{ base: "lg", md: "md" }}
-                maxW="8xl"
+                maxW="6xl"
                 alignItems="center"
               >
                 {children}

@@ -23,10 +23,7 @@ export const TaskService = {
       }
     }
 
-    return apiClient.get<Task[]>(endpoint, true, {
-      revalidate: 30, // 30秒間キャッシュ
-      tags: ["tasks"],
-    });
+    return apiClient.get<Task[]>(endpoint, true);
   },
 
   /**
@@ -35,11 +32,7 @@ export const TaskService = {
   getByLectureId: async (lectureId: string): Promise<Task[]> => {
     return apiClient.get<Task[]>(
       `/api/v1/tasks/tasks/?lecture_id=${lectureId}`,
-      true,
-      {
-        revalidate: 30,
-        tags: [`lecture-${lectureId}-tasks`],
-      }
+      true
     );
   },
 
@@ -47,10 +40,7 @@ export const TaskService = {
    * 特定のタスクを取得
    */
   getById: async (taskId: string): Promise<Task> => {
-    return apiClient.get<Task>(`/api/v1/tasks/tasks/${taskId}/`, true, {
-      revalidate: 30,
-      tags: [`task-${taskId}`],
-    });
+    return apiClient.get<Task>(`/api/v1/tasks/tasks/${taskId}/`, true);
   },
 
   /**

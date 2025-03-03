@@ -32,6 +32,7 @@ export default function ArticleCard({ article }: ArticleCardProps) {
         transition="all 0.2s"
         overflow="hidden"
         height="100%"
+        border="1px solid"
       >
         <CardBody p={4}>
           <Flex direction="column" gap={3} height="100%">

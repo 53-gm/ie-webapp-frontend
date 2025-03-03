@@ -1,4 +1,4 @@
-import { Task } from "@/app/_services/type";
+import { Task } from "@/types/api";
 import { Card, CardBody, CardHeader, Heading, Text } from "@yamada-ui/react";
 
 type Props = {

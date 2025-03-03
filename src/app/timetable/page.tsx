@@ -1,8 +1,7 @@
-import { TimeTable } from "@/app/_components/Timetable";
 import { auth } from "@/lib/auth";
 import { VStack } from "@yamada-ui/react";
 import { notFound } from "next/navigation";
-import { getAllSchedules } from "../_services/getAllSchedules";
+import { TimeTable } from "./_components/Timetable";
 
 const TimeTablePage = async () => {
   const session = await auth();
@@ -12,12 +11,10 @@ const TimeTablePage = async () => {
     notFound();
   }
 
-  const schedules = await getAllSchedules();
-
   return (
     <>
       <VStack alignItems="center">
-        <TimeTable allSchedules={schedules} />
+        <TimeTable />
       </VStack>
     </>
   );

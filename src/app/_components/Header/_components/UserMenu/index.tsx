@@ -26,6 +26,7 @@ const UserMenu: React.FC = async () => {
           icon={
             session ? (
               <Avatar
+                name={session?.user?.profile?.display_name}
                 src={session?.user?.profile?.picture || ""}
                 width="48px"
                 height="48px"

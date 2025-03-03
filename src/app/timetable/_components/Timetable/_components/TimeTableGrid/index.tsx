@@ -1,14 +1,15 @@
-import { Register } from "@/app/_services/type";
+import { Registration } from "@/types/api";
 import { Grid, GridItem, Text, VStack } from "@yamada-ui/react";
 import React from "react";
 
 type Props = {
-  registeredMap: Record<string, Register | undefined>;
+  registrationsMap: Map<number, Registration>;
   onCellClick: (day: number, time: number) => void;
 };
 
 const DAYS = [1, 2, 3, 4, 5, 6, 7];
 const TIMES = [1, 2, 3, 4, 5];
+const MAX_TIME = 5;
 const TIMES_VALUE = [
   "9:00~10:30",
   "10:40~12:10",
@@ -17,7 +18,7 @@ const TIMES_VALUE = [
   "16:20~17:50",
 ];
 
-const TimeTableGrid: React.FC<Props> = ({ registeredMap, onCellClick }) => {
+const TimeTableGrid: React.FC<Props> = ({ registrationsMap, onCellClick }) => {
   return (
     <Grid
       templateColumns={{
@@ -39,8 +40,8 @@ const TimeTableGrid: React.FC<Props> = ({ registeredMap, onCellClick }) => {
       {TIMES.map((time) => (
         <React.Fragment key={time}>
           {DAYS.map((day) => {
-            const key = `${day}-${time}`;
-            const lecture = registeredMap[key]?.lecture;
+            const key = (day - 1) * MAX_TIME + time;
+            const lecture = registrationsMap.get(key)?.lecture;
             return (
               <GridItem
                 key={key}

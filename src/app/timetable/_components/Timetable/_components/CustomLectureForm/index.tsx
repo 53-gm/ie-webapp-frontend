@@ -1,5 +1,4 @@
-// CustomLectureForm.tsx
-import { CreateLecture, Schedule } from "@/app/_services/type";
+import { CreateLectureInput } from "@/types/api";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Button,
@@ -22,20 +21,12 @@ import { createLecture } from "./action";
 import { createLectureSchema } from "./schema";
 
 interface CustomLectureFormProps {
-  schedules: Schedule[];
-  day: number;
-  time: number;
-  // 親が管理しているフォーム値（初期値など）
-  defaultValues?: Partial<CreateLecture>;
-  // フォームが変化したら随時呼び出す
-  onChangeCustomFormData?: (data: Partial<CreateLecture>) => void;
+  defaultValues?: Partial<CreateLectureInput>;
+  onChangeCustomFormData?: (data: Partial<CreateLectureInput>) => void;
   onRegisterSuccess: (data: any) => void;
 }
 
 const CustomLectureForm: React.FC<CustomLectureFormProps> = ({
-  schedules,
-  day,
-  time,
   defaultValues = {},
   onChangeCustomFormData,
   onRegisterSuccess,
@@ -46,7 +37,7 @@ const CustomLectureForm: React.FC<CustomLectureFormProps> = ({
     handleSubmit,
     watch,
     formState: { errors },
-  } = useForm<CreateLecture>({
+  } = useForm<createLectureSchema>({
     resolver: zodResolver(createLectureSchema),
     defaultValues: {
       // day/timeを固定的に入れたいならここで
@@ -63,9 +54,9 @@ const CustomLectureForm: React.FC<CustomLectureFormProps> = ({
     onChangeCustomFormData?.(watchAll);
   }, [watchAll, onChangeCustomFormData]);
 
-  const onSubmit: SubmitHandler<CreateLecture> = async (data) => {
+  const onSubmit: SubmitHandler<createLectureSchema> = async (data) => {
     try {
-      await createLecture(data);
+      await createLecture(data as CreateLectureInput);
       notice({
         title: "通知",
         description: "講義の登録に成功しました",
@@ -81,15 +72,20 @@ const CustomLectureForm: React.FC<CustomLectureFormProps> = ({
     }
   };
 
-  // schedules を MultiSelect 用の items に変換
-  const scheduleItems: SelectItem[] = schedules.map((schedule) => ({
-    label:
-      ["月", "火", "水", "木", "金", "土", "日"][schedule.day - 1] +
-      "曜日" +
-      schedule.time +
-      "限",
-    value: String(schedule.id),
-  }));
+  const scheduleItems: SelectItem[] = [];
+  for (let day = 1; day <= 7; day++) {
+    for (let time = 1; time <= 5; time++) {
+      const item: SelectItem = {
+        label:
+          ["月", "火", "水", "木", "金", "土", "日"][day - 1] +
+          "曜日" +
+          time +
+          "限",
+        value: String((day - 1) * 5 + time),
+      };
+      scheduleItems.push(item);
+    }
+  }
 
   const termItems: SelectItem[] = [
     { label: "第1ターム", value: "1" },

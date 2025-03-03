@@ -30,10 +30,7 @@ export const LectureService = {
       }
     }
 
-    return apiClient.get<Lecture[]>(endpoint, true, {
-      revalidate: 3600, // 1時間キャッシュ
-      tags: ["lectures"],
-    });
+    return apiClient.get<Lecture[]>(endpoint, true);
   },
 
   /**
@@ -46,11 +43,7 @@ export const LectureService = {
   ): Promise<Lecture[]> => {
     return apiClient.get<Lecture[]>(
       `/api/v1/academics/lectures/?day=${day}&time=${time}&terms=${term}`,
-      true,
-      {
-        revalidate: 3600,
-        tags: [`lectures-day-${day}-time-${time}-term-${term}`],
-      }
+      true
     );
   },
 
@@ -60,11 +53,7 @@ export const LectureService = {
   getById: async (lectureId: string): Promise<Lecture> => {
     return apiClient.get<Lecture>(
       `/api/v1/academics/lectures/${lectureId}/`,
-      true,
-      {
-        revalidate: 3600,
-        tags: [`lecture-${lectureId}`],
-      }
+      true
     );
   },
 
@@ -103,10 +92,7 @@ export const LectureService = {
    * 全てのスケジュールを取得
    */
   getAllSchedules: async (): Promise<Schedule[]> => {
-    return apiClient.get<Schedule[]>("/api/v1/academics/schedules/", true, {
-      revalidate: 86400, // 24時間キャッシュ（スケジュールはほぼ変わらない）
-      tags: ["schedules"],
-    });
+    return apiClient.get<Schedule[]>("/api/v1/academics/schedules/", true);
   },
 
   /**
@@ -118,11 +104,14 @@ export const LectureService = {
   ): Promise<Registration[]> => {
     return apiClient.get<Registration[]>(
       `/api/v1/academics/registrations/?year=${year}&number=${term}`,
-      true,
-      {
-        revalidate: 60, // 1分間キャッシュ
-        tags: [`registrations-${year}-${term}`],
-      }
+      true
+    );
+  },
+
+  getRegisteredLectureById: async (id: string): Promise<Registration> => {
+    return apiClient.get<Registration>(
+      `/api/v1/academics/registrations/${id}/`,
+      true
     );
   },
 

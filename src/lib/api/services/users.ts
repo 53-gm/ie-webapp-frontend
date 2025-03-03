@@ -15,17 +15,11 @@ export const UserService = {
    * ユーザープロフィールを取得
    */
   getProfile: async (): Promise<UserProfile> => {
-    return apiClient.get<UserProfile>("/api/v1/users/me/profile/", true, {
-      revalidate: 60, // 1分間キャッシュ
-      tags: ["user-profile"],
-    });
+    return apiClient.get<UserProfile>("/api/v1/users/me/profile/", true);
   },
 
   getProfileById: async (id: string): Promise<UserProfile> => {
-    return apiClient.get<UserProfile>(`/api/v1/users/profiles/${id}/`, false, {
-      revalidate: 60, // 1分間キャッシュ
-      tags: ["user-profile"],
-    });
+    return apiClient.get<UserProfile>(`/api/v1/users/profiles/${id}/`, false);
   },
 
   /**
@@ -43,19 +37,13 @@ export const UserService = {
    * 全ての学部を取得
    */
   getAllFaculties: async (): Promise<Faculty[]> => {
-    return apiClient.get<Faculty[]>("/api/v1/users/faculties/", false, {
-      revalidate: 86400, // 24時間キャッシュ（学部情報はほぼ変わらない）
-      tags: ["faculties"],
-    });
+    return apiClient.get<Faculty[]>("/api/v1/users/faculties/", false);
   },
 
   /**
    * 全ての学科を取得
    */
   getAllDepartments: async (): Promise<Department[]> => {
-    return apiClient.get<Department[]>("/api/v1/users/departments/", false, {
-      revalidate: 86400, // 24時間キャッシュ（学科情報はほぼ変わらない）
-      tags: ["departments"],
-    });
+    return apiClient.get<Department[]>("/api/v1/users/departments/", false);
   },
 };

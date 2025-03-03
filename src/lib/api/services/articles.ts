@@ -13,20 +13,14 @@ export const ArticleService = {
     const endpoint = `/api/v1/articles/articles/${
       isPublicOnly ? "?is_public=true" : ""
     }`;
-    return apiClient.get<Article[]>(endpoint, true, {
-      revalidate: 60, // 1分間キャッシュ
-      tags: ["articles"],
-    });
+    return apiClient.get<Article[]>(endpoint, true);
   },
 
   /**
    * 特定の記事を取得
    */
   getBySlug: async (slug: string): Promise<Article> => {
-    return apiClient.get<Article>(`/api/v1/articles/articles/${slug}`, true, {
-      revalidate: 60,
-      tags: [`article-${slug}`],
-    });
+    return apiClient.get<Article>(`/api/v1/articles/articles/${slug}`, true);
   },
 
   /**
@@ -36,10 +30,7 @@ export const ArticleService = {
     authorId: string,
     slug: string
   ): Promise<Article> => {
-    return apiClient.get<Article>(`/api/v1/articles/articles/${slug}/`, true, {
-      revalidate: 60,
-      tags: [`article-${authorId}-${slug}`],
-    });
+    return apiClient.get<Article>(`/api/v1/articles/articles/${slug}/`, true);
   },
 
   /**
@@ -52,10 +43,7 @@ export const ArticleService = {
     const endpoint = `/api/v1/articles/articles/user/${profileId}/${
       isPublicOnly ? "?is_public=true" : ""
     }`;
-    return apiClient.get<Article[]>(endpoint, true, {
-      revalidate: 60,
-      tags: [`profile-${profileId}-articles`],
-    });
+    return apiClient.get<Article[]>(endpoint, true);
   },
 
   /**

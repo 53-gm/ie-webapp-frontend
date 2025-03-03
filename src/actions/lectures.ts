@@ -167,6 +167,18 @@ export async function getRegisteredLectures(year: number, term: number) {
   }
 }
 
+export async function getRegisteredLectureById(id: string) {
+  try {
+    return await LectureService.getRegisteredLectureById(id);
+  } catch (error) {
+    console.error(`ID${id}の登録講義取得に失敗しました`, error);
+    if (error instanceof APIError) {
+      return { error: error.toJSON() };
+    }
+    throw error;
+  }
+}
+
 /**
  * 講義を登録
  */

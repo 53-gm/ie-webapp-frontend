@@ -1,16 +1,10 @@
 // LectureRegistrar.tsx
-import { getLectures } from "@/app/_services/getLectures";
-import {
-  CreateLecture,
-  Lecture,
-  Register,
-  Schedule,
-  Task,
-} from "@/app/_services/type";
+
+import { getLectures } from "@/actions";
+import { CreateLectureInput, Lecture } from "@/types/api";
 import { Button, ScrollArea, Text, VStack } from "@yamada-ui/react";
 import React, { useEffect, useState } from "react";
 import CustomLectureForm from "../CustomLectureForm";
-import LectureDetail from "../LectureDetail";
 import { LectureList } from "../LectureList";
 
 interface LectureRegistrarProps {
@@ -18,12 +12,7 @@ interface LectureRegistrarProps {
   day: number | null;
   time: number | null;
   term: number;
-  // すでに登録されている講義の場合
-  registeredLecture?: Register;
 
-  registeredLectureTasks?: Task[];
-  // 全体のスケジュール(カスタムフォームで日程を選択する等)
-  allSchedules: Schedule[];
   // 登録完了後や削除完了後に呼び出す
   onRegisterSuccess: () => void;
 }
@@ -32,45 +21,39 @@ export const LectureRegistrar: React.FC<LectureRegistrarProps> = ({
   day,
   time,
   term,
-  registeredLecture,
-  registeredLectureTasks,
-  allSchedules,
+
   onRegisterSuccess,
 }) => {
-  // 「既存の講義を登録する」か「カスタム講義を登録する」か
   const [isCustom, setIsCustom] = useState<boolean>(false);
 
-  // 取得した既存講義リスト
   const [lectures, setLectures] = useState<Lecture[]>([]);
 
-  // カスタムフォーム用のデータ
-  const [customFormData, setCustomFormData] = useState<Partial<CreateLecture>>(
-    {}
-  );
+  const [customFormData, setCustomFormData] = useState<
+    Partial<CreateLectureInput>
+  >({});
 
   useEffect(() => {
-    // 既存登録がある場合は「講義詳細画面」を出すのでfetch不要
-    if (registeredLecture) return;
     if (day !== null && time !== null) {
       // 既存講義を取得
-      getLectures({ day, time, terms: term })
-        .then((fetched) => setLectures(fetched))
+      getLectures({ schedules: String((day - 1) * 5 + time), terms: term })
+        .then((result) => {
+          if (!("error" in result)) {
+            setLectures(result);
+          }
+        })
         .catch((err) => console.error(err));
     }
-  }, [day, time, registeredLecture]);
+  }, [day, time]);
 
   useEffect(() => {
-    if (!registeredLecture && day !== null && time !== null) {
-      const targetSchedule = allSchedules.find(
-        (sch) => sch.day === day && sch.time === time
-      );
+    if (day !== null && time !== null) {
       setCustomFormData((prev) => ({
         ...prev,
-        schedule_ids: targetSchedule ? [String(targetSchedule.id)] : [],
+        schedule_ids: [String((day - 1) * 5 + time)],
         term_ids: [String(term)],
       }));
     }
-  }, [registeredLecture, day, time, term, allSchedules]);
+  }, [day, time, term]);
 
   // 「既存講義をカスタム登録で複製」ボタンが押された時
   const handleCopyLectureToCustom = (lecture: Lecture) => {
@@ -87,17 +70,6 @@ export const LectureRegistrar: React.FC<LectureRegistrarProps> = ({
     });
     setIsCustom(true);
   };
-
-  // LectureDetail は「すでに登録された講義の表示・削除のみ」を担当
-  if (registeredLecture) {
-    return (
-      <LectureDetail
-        register={registeredLecture}
-        onDeleteSuccess={onRegisterSuccess}
-        tasks={registeredLectureTasks}
-      />
-    );
-  }
 
   return (
     <VStack align="start">
@@ -119,12 +91,7 @@ export const LectureRegistrar: React.FC<LectureRegistrarProps> = ({
       <ScrollArea w="full" p="sm" innerProps={{ as: VStack }}>
         {isCustom ? (
           <CustomLectureForm
-            day={day || 0}
-            time={time || 0}
-            schedules={allSchedules}
-            // フォーム初期値
             defaultValues={customFormData}
-            // フォーム変更をキャッチしたければ
             onChangeCustomFormData={setCustomFormData}
             onRegisterSuccess={onRegisterSuccess}
           />
@@ -132,7 +99,6 @@ export const LectureRegistrar: React.FC<LectureRegistrarProps> = ({
           <LectureList
             lectures={lectures}
             onRegisterSuccess={onRegisterSuccess}
-            // カスタムへコピー
             onCopyLectureToCustom={handleCopyLectureToCustom}
           />
         )}
