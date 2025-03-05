@@ -71,7 +71,7 @@ export default function ArticleCard({ article }: ArticleCardProps) {
 
                 {formattedUpdateDate && (
                   <HStack gap="xs">
-                    <ClockIcon font-size="16px" />
+                    <ClockIcon fontSize="16px" />
                     <Text fontSize="14px">{formattedUpdateDate}</Text>
                   </HStack>
                 )}

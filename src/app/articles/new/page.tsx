@@ -1,14 +1,10 @@
 "use client";
-import { EditorContent, useEditor } from "@tiptap/react";
-import { useEffect, useState } from "react";
-import "tippy.js/animations/shift-toward-subtle.css";
-
-import "@/app/_components/tiptap/styles/tiptap.scss";
-import { postArticle } from "@/app/_services/postArticle";
-import { CreateArticle } from "@/app/_services/type";
+import { createArticle } from "@/actions";
 import { getExtensions } from "@/lib/tiptap/extensions";
 import { CustomBubbleMenu, LinkBubbleMenu } from "@/lib/tiptap/menus";
-import { notitapEditorClass } from "@/lib/tiptap/proseClassString";
+import { CreateArticleInput } from "@/types/api";
+import { unwrap } from "@/utils/unwrap";
+import { EditorContent, useEditor } from "@tiptap/react";
 import {
   Button,
   FormControl,
@@ -18,21 +14,18 @@ import {
   useBoolean,
   VStack,
 } from "@yamada-ui/react";
+import { useEffect } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 
 const ArticleEditorPage = () => {
-  const [isAddingNewLink, setIsAddingNewLink] = useState(false);
-
-  const openLinkModal = () => setIsAddingNewLink(true);
-
   const [isEditable, { toggle: toggleEditable }] = useBoolean(true);
 
   const editor = useEditor({
-    extensions: getExtensions({ openLinkModal }),
+    extensions: getExtensions(),
     editable: isEditable,
     editorProps: {
       attributes: {
-        class: `${notitapEditorClass} focus:outline-none w-full`,
+        class: `focus:outline-none w-full`,
         spellcheck: "false",
         suppressContentEditableWarning: "true",
       },
@@ -53,13 +46,16 @@ const ArticleEditorPage = () => {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<CreateArticle>();
+  } = useForm<CreateArticleInput>();
 
-  const onSubmit: SubmitHandler<CreateArticle> = async (data) => {
+  const onSubmit: SubmitHandler<CreateArticleInput> = async (data) => {
     const editorJSON = editor?.getJSON();
     const editorContentStr = JSON.stringify(editorJSON);
-    const submitData: CreateArticle = { ...data, content: editorContentStr };
-    await postArticle({ payload: submitData });
+    const submitData: CreateArticleInput = {
+      ...data,
+      content: editorContentStr,
+    };
+    unwrap(await createArticle(submitData));
   };
 
   return (

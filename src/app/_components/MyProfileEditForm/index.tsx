@@ -1,6 +1,6 @@
 "use client";
 
-import { Department, Faculty } from "@/app/_services/type";
+import { Department, Faculty } from "@/types/api";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Button,

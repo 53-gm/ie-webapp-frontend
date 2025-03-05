@@ -37,8 +37,8 @@ export const LectureRegistrar: React.FC<LectureRegistrarProps> = ({
       // 既存講義を取得
       getLectures({ schedules: String((day - 1) * 5 + time), terms: term })
         .then((result) => {
-          if (!("error" in result)) {
-            setLectures(result);
+          if (!result.error) {
+            setLectures(result.data || []);
           }
         })
         .catch((err) => console.error(err));

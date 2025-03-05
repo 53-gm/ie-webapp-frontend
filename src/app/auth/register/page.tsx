@@ -1,6 +1,6 @@
-import { getDepartments } from "@/app/_services/getDepartments";
-import { getFaculties } from "@/app/_services/getFaculties";
+import { getAllDepartments, getAllFaculties } from "@/actions";
 import { auth } from "@/lib/auth";
+import { unwrap } from "@/utils/unwrap";
 import { notFound } from "next/navigation";
 import RegistrationSteps from "./_components/RegistrationsSteps";
 
@@ -12,8 +12,8 @@ export default async function Page() {
   }
 
   const user = session.user;
-  const departments = await getDepartments();
-  const faculties = await getFaculties();
+  const departments = unwrap(await getAllDepartments());
+  const faculties = unwrap(await getAllFaculties());
 
   return (
     <RegistrationSteps

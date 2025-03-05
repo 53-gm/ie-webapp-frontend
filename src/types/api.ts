@@ -1,13 +1,4 @@
 /**
- * 共通型
- */
-export interface BaseResponse {
-  id: string;
-  created_at: string;
-  updated_at: string;
-}
-
-/**
  * 学部モデル
  * @see accounts/models.py:Faculty
  */

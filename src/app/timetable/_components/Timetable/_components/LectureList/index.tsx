@@ -1,6 +1,6 @@
-// LectureList.tsx
-import { postRegistLecture } from "@/app/_services/postRegistLecture";
+import { registerLecture } from "@/actions";
 import { Lecture } from "@/types/api";
+import { unwrap } from "@/utils/unwrap";
 import {
   Box,
   Button,
@@ -28,10 +28,10 @@ export const LectureList: React.FC<LectureListProps> = ({
 
   const handleRegister = async (id: string) => {
     try {
-      await postRegistLecture({ lecture_id: id, year: 2024 });
+      const register = unwrap(await registerLecture(id, 2024));
       notice({
         title: "通知",
-        description: "講義を登録しました",
+        description: `${register.lecture.name}を登録しました`,
         status: "success",
       });
       onRegisterSuccess();

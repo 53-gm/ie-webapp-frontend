@@ -2,7 +2,6 @@ import { mergeAttributes, Node, nodeInputRule } from "@tiptap/core";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 
 import { getMediaPasteDropPlugin, UploadFnType } from "./mediaPasteDropPlugin";
-
 import { ResizableMediaNodeView } from "./ResizableMediaNodeView";
 
 declare module "@tiptap/core" {
@@ -16,16 +15,14 @@ declare module "@tiptap/core" {
         src: string;
         alt?: string;
         title?: string;
-        width?: string;
-        height?: string;
+        width?: string | number;
+        height?: string | number;
       }) => ReturnType;
     };
   }
 }
 
 export interface MediaOptions {
-  // inline: boolean, // we have floating support, so block is good enough
-  // allowBase64: boolean, // we're not going to allow this
   HTMLAttributes: Record<string, any>;
   uploadFn: UploadFnType;
 }
@@ -69,13 +66,13 @@ export const ResizableMedia = Node.create<MediaOptions>({
         default: null,
       },
       width: {
-        default: "100%",
+        default: 400,
       },
       height: {
         default: "auto",
       },
       dataAlign: {
-        default: "left", // 'left' | 'center' | 'right'
+        default: "start", // 'start' | 'center' | 'end'
       },
       dataFloat: {
         default: null, // 'left' | 'right'
@@ -121,11 +118,7 @@ export const ResizableMedia = Node.create<MediaOptions>({
       ];
     }
 
-    if (!mediaType)
-      console.error(
-        "TiptapMediaExtension-renderHTML method: Media Type not set, going default with image"
-      );
-
+    // Default fallback
     return [
       "img",
       mergeAttributes(this.options.HTMLAttributes, HTMLAttributes),
@@ -155,11 +148,6 @@ export const ResizableMedia = Node.create<MediaOptions>({
             });
           }
 
-          if (!mediaType)
-            console.error(
-              "TiptapMediaExtension-setMedia: Media Type not set, going default with image"
-            );
-
           return commands.insertContent({
             type: this.name,
             attrs: options,
@@ -170,6 +158,12 @@ export const ResizableMedia = Node.create<MediaOptions>({
 
   addNodeView() {
     return ReactNodeViewRenderer(ResizableMediaNodeView);
+  },
+
+  addStorage() {
+    return {
+      uploadFn: this.options.uploadFn,
+    };
   },
 
   addInputRules() {

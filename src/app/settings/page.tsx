@@ -1,7 +1,7 @@
+import { getAllDepartments, getAllFaculties } from "@/actions";
 import { auth } from "@/lib/auth";
+import { unwrap } from "@/utils/unwrap";
 import { notFound } from "next/navigation";
-import { getDepartments } from "../_services/getDepartments";
-import { getFaculties } from "../_services/getFaculties";
 import SettingTabs from "./_components/SettingTabs";
 
 const Page = async () => {
@@ -12,8 +12,8 @@ const Page = async () => {
   }
 
   const user = session.user;
-  const departments = await getDepartments();
-  const faculties = await getFaculties();
+  const departments = unwrap(await getAllDepartments());
+  const faculties = unwrap(await getAllFaculties());
   return (
     <SettingTabs user={user} departments={departments} faculties={faculties} />
   );

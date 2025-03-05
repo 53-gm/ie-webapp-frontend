@@ -2,11 +2,11 @@ import { getAllArticles } from "@/actions";
 import ArticlesList from "@/app/_components/ArticleList";
 import { auth } from "@/lib/auth";
 import { Article } from "@/types/api";
+import { unwrap } from "@/utils/unwrap";
 import { PenIcon, PlusIcon } from "@yamada-ui/lucide";
 import {
   Box,
   Button,
-  Center,
   Flex,
   Heading,
   HStack,
@@ -31,16 +31,7 @@ export default async function ArticlesPage({
   const sortBy = searchParams.sort || "newest";
 
   // 記事一覧を取得
-  const articlesData = await getAllArticles(true); // true は公開記事のみを取得
-
-  // エラーハンドリング
-  if ("error" in articlesData) {
-    return (
-      <Center py={10}>
-        <Text>記事の読み込み中にエラーが発生しました。</Text>
-      </Center>
-    );
-  }
+  const articlesData = unwrap(await getAllArticles(true)); // true は公開記事のみを取得
 
   // 検索でフィルタリング
   let filteredArticles = [...articlesData];

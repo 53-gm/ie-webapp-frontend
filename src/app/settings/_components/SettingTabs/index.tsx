@@ -1,7 +1,7 @@
 "use client";
 
 import MyProfileEditForm from "@/app/_components/MyProfileEditForm";
-import { Department, Faculty } from "@/app/_services/type";
+import { Department, Faculty } from "@/types/api";
 import { Tab, TabPanel, Tabs } from "@yamada-ui/react";
 import { User } from "next-auth";
 

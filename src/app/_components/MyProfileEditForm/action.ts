@@ -1,6 +1,6 @@
 "use server";
 
-import { postProfile } from "@/app/_services/postProfile";
+import { updateProfile } from "@/actions";
 import { unstable_update } from "@/lib/auth";
 import { PostProfileData, postProfileSchema } from "./schema";
 
@@ -11,7 +11,7 @@ export async function updateUserProfile(formData: PostProfileData) {
     throw new Error(errorMessages.join(", "));
   }
 
-  const data = await postProfile({
+  const data = await updateProfile({
     ...parsedData.data,
   });
 

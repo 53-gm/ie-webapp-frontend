@@ -24,7 +24,7 @@ export default function ArticlesList({
       {articles.length > 0 ? (
         <Grid
           templateColumns={{
-            base: "repeat(3, 1fr)",
+            base: "repeat(2, 1fr)",
             md: "repeat(1, 1fr)",
           }}
           gap="md"

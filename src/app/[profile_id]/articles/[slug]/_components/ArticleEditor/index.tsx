@@ -4,6 +4,7 @@ import { updateArticle } from "@/actions";
 import { getExtensions } from "@/lib/tiptap/extensions";
 import { CustomBubbleMenu, LinkBubbleMenu } from "@/lib/tiptap/menus";
 import { Article } from "@/types/api";
+import { unwrap } from "@/utils/unwrap";
 import { format } from "@formkit/tempo";
 import { EditorContent, useEditor } from "@tiptap/react";
 import {
@@ -106,33 +107,26 @@ export default function ArticleEditor({
     try {
       const editorContent = JSON.stringify(editor.getJSON());
 
-      const result = await updateArticle(article.slug, {
-        title,
-        content: editorContent,
-        is_public: isPublic,
+      const updatedArticle = unwrap(
+        await updateArticle(article.slug, {
+          title,
+          content: editorContent,
+          is_public: isPublic,
+        })
+      );
+
+      notice({
+        title: "成功",
+        description: "記事を更新しました",
+        status: "success",
       });
 
-      if ("error" in result) {
-        notice({
-          title: "エラー",
-          description: result.error?.error.message,
-          status: "error",
-        });
-      } else {
-        notice({
-          title: "成功",
-          description: "記事を更新しました",
-          status: "success",
-        });
-
-        // 状態を更新済みの記事に合わせる
-        router.refresh();
-      }
-    } catch (error) {
+      // 状態を更新済みの記事に合わせる
+      router.refresh();
+    } catch (error: any) {
       notice({
         title: "エラー",
-        description:
-          error instanceof Error ? error.message : "不明なエラーが発生しました",
+        description: error.message,
         status: "error",
       });
     } finally {
@@ -150,7 +144,7 @@ export default function ArticleEditor({
   return (
     <>
       {/* ヘッダー部分 */}
-      <Box
+      <VStack
         as="header"
         pt={8}
         pb={6}
@@ -193,7 +187,7 @@ export default function ArticleEditor({
             </HStack>
           </VStack>
         ) : (
-          <Flex align="center" mb={6}>
+          <>
             <Heading as="h1" size="2xl" flex="1">
               {title}
             </Heading>
@@ -207,15 +201,10 @@ export default function ArticleEditor({
                 onClick={toggleEditMode}
               />
             )}
-          </Flex>
+          </>
         )}
 
-        <Flex
-          direction={{ base: "column", md: "row" }}
-          justify="space-between"
-          align={{ base: "start", md: "center" }}
-          gap={4}
-        >
+        <Flex direction={{ base: "column", md: "row" }} align="center" gap={4}>
           <Link href={authorProfilePath} style={{ textDecoration: "none" }}>
             <HStack>
               <Avatar
@@ -262,19 +251,21 @@ export default function ArticleEditor({
             )}
           </HStack>
         </Flex>
-      </Box>
+      </VStack>
 
       {/* コンテンツ部分 */}
       <Box as="article" py={8} w="full" minH="100vh">
-        <Box>
-          <EditorContent editor={editor} />
-          {isEditMode && (
-            <>
-              <CustomBubbleMenu editor={editor} />
-              <LinkBubbleMenu editor={editor} />
-            </>
-          )}
-        </Box>
+        <HStack>
+          <Box>
+            <EditorContent editor={editor} />
+            {isEditMode && (
+              <>
+                <CustomBubbleMenu editor={editor} />
+                <LinkBubbleMenu editor={editor} />
+              </>
+            )}
+          </Box>
+        </HStack>
       </Box>
     </>
   );

@@ -1,8 +1,8 @@
 "use client";
 
-import { getTasks } from "@/actions";
 import { getRegisteredLectures } from "@/actions/lectures";
-import { Registration, Task } from "@/types/api";
+import { Registration } from "@/types/api";
+import { unwrap } from "@/utils/unwrap";
 import { YearPicker } from "@yamada-ui/calendar";
 import {
   HStack,
@@ -34,7 +34,6 @@ export function TimeTable() {
   const router = useRouter();
   const [year, setYear] = useState<number>(2024);
   const [term, setTerm] = useState<number>(4);
-  const [tasks, setTasks] = useState<Task[] | null>(null);
   const [registrationsMap, setRegistrationsMap] = useState<
     Map<number, Registration>
   >(new Map());
@@ -43,18 +42,8 @@ export function TimeTable() {
   const [selectedTime, setSelectedTime] = useState<number | null>(null);
 
   const fetchRegisteredLectures = async () => {
-    const registers = await getRegisteredLectures(year, term);
-    const tasks = await getTasks();
+    const registers = unwrap(await getRegisteredLectures(year, term));
 
-    if ("error" in registers) {
-      throw new Error(registers.error.error.message);
-    }
-
-    if ("error" in tasks) {
-      throw new Error(tasks.error.error.message);
-    }
-
-    setTasks(tasks);
     setRegistrationsMap(buildRegistrationMap(registers));
   };
 

@@ -1,13 +1,14 @@
 "use server";
 
-import { getDepartments } from "@/app/_services/getDepartments";
-import { postLecture } from "@/app/_services/postLecture";
-import { postRegistLecture } from "@/app/_services/postRegistLecture";
-import { CreateLecture } from "@/app/_services/type";
+import { getAllDepartments, registerLecture } from "@/actions";
 import { auth } from "@/lib/auth";
+import { CreateLectureInput } from "@/types/api";
 import { createLectureSchema } from "./schema";
 
-export async function createLecture(formData: CreateLecture) {
+import { createLecture as CreateLecture } from "@/actions";
+import { unwrap } from "@/utils/unwrap";
+
+export async function createLecture(formData: CreateLectureInput) {
   const session = await auth();
   const user = session?.user;
   if (!session || !user) {
@@ -21,26 +22,19 @@ export async function createLecture(formData: CreateLecture) {
   }
 
   if (!parsedData.data.department_ids) {
-    const allDepartments = await getDepartments();
+    const allDepartments = unwrap(await getAllDepartments());
     parsedData.data.department_ids = allDepartments.map((d) => String(d.id));
   }
 
-  console.log(parsedData.data);
+  const createLectureResult = unwrap(
+    await CreateLecture({
+      ...parsedData.data,
+    })
+  );
 
-  const data = await postLecture({
-    payload: parsedData.data,
-  });
-
-  console.log(data);
-
-  if (!data.id) {
-    throw new Error("講義の生成時にエラーが発生したため登録を中断しました");
-  }
-
-  const registerData = await postRegistLecture({
-    lecture_id: data!.id,
-    year: 2024,
-  });
+  const registerData = unwrap(
+    await registerLecture(createLectureResult.id, 2024)
+  );
 
   return registerData;
 }

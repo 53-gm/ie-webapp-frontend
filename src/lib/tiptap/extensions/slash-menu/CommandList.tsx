@@ -1,4 +1,4 @@
-import React, { useEffect, useImperativeHandle, useState } from "react";
+import React, { useEffect, useImperativeHandle, useRef, useState } from "react";
 import { stopPrevent } from "../../utils";
 
 import {
@@ -20,10 +20,47 @@ interface CommandListProps {
 export const CommandList = React.forwardRef(
   ({ items, command }: CommandListProps, ref) => {
     const [selectedIndex, setSelectedIndex] = useState(0);
+    // 各アイテムへの参照を保持するための配列
+    const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
+    // スクロールエリアへの参照
+    const scrollAreaRef = useRef<HTMLDivElement | null>(null);
 
+    // アイテムリストが変更されたらリファレンス配列を初期化
     useEffect(() => {
+      itemRefs.current = itemRefs.current.slice(0, items.length);
       setSelectedIndex(0);
+      // 最初のアイテムが選択されたらスクロールを一番上に
+      scrollToItem(0);
     }, [items]);
+
+    // 選択されたアイテムまでスクロールする関数
+    const scrollToItem = (index: number) => {
+      // 少し遅延させてDOMが更新された後に実行する
+      setTimeout(() => {
+        const scrollArea = scrollAreaRef.current;
+        const selectedItem = itemRefs.current[index];
+
+        if (!scrollArea || !selectedItem) return;
+
+        const scrollAreaRect = scrollArea.getBoundingClientRect();
+        const selectedItemRect = selectedItem.getBoundingClientRect();
+
+        // 選択したアイテムが見えるようにスクロール位置を調整
+        if (selectedItemRect.bottom > scrollAreaRect.bottom) {
+          // 下にはみ出した場合
+          scrollArea.scrollTop +=
+            selectedItemRect.bottom - scrollAreaRect.bottom;
+        } else if (selectedItemRect.top < scrollAreaRect.top) {
+          // 上にはみ出した場合
+          scrollArea.scrollTop -= scrollAreaRect.top - selectedItemRect.top;
+        }
+      }, 0);
+    };
+
+    // 選択インデックスが変更されたらスクロール
+    useEffect(() => {
+      scrollToItem(selectedIndex);
+    }, [selectedIndex]);
 
     useImperativeHandle(ref, () => ({
       onKeyDown: ({ event }: { event: KeyboardEvent }) => {
@@ -66,8 +103,17 @@ export const CommandList = React.forwardRef(
 
       if (item) setTimeout(() => command(item));
     };
+
     return (
-      <ScrollArea h="xs" w="xs" rounded="md" shadow="md" justifyItems="center">
+      <ScrollArea
+        type="always"
+        h="xs"
+        w="xs"
+        rounded="md"
+        shadow="md"
+        justifyItems="center"
+        ref={scrollAreaRef}
+      >
         <VStack gap="none">
           {items.length ? (
             <>
@@ -81,6 +127,10 @@ export const CommandList = React.forwardRef(
                     key={item.title}
                     bgColor={index == selectedIndex ? "gray.100" : ""}
                     margin="xs"
+                    ref={(el) => {
+                      itemRefs.current[index] = el;
+                    }}
+                    size="sm"
                   >
                     <HStack gap="sm" alignItems="baseline" marginX="md">
                       <Box fontSize="xl" color="gray.600">

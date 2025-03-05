@@ -1,3 +1,4 @@
+import { uploadImage } from "@/actions";
 import { AnyExtension } from "@tiptap/core";
 import Blockquote from "@tiptap/extension-blockquote";
 import Bold from "@tiptap/extension-bold";
@@ -15,6 +16,7 @@ import Text from "@tiptap/extension-text";
 import Underline from "@tiptap/extension-underline";
 import { DBlock } from "./dBlock";
 import { Document } from "./doc";
+import { DropZone } from "./dropzone/dropzone";
 import { Paragraph } from "./paragraph";
 import { Placeholder } from "./placeholder";
 import { ResizableMedia } from "./resizableMedia";
@@ -65,20 +67,29 @@ export const getExtensions = (): AnyExtension[] => {
 
         fd.append("file", image);
 
-        try {
-          const response = await fetch("https://api.imgur.com/3/image", {
-            method: "POST",
-            body: fd,
-          });
+        const uploadImageResult = await uploadImage(fd);
 
-          console.log(await response.json());
-        } catch {
-          // do your thing
-        } finally {
-          // do your thing
+        if ("error" in uploadImageResult) {
+          throw new Error(uploadImageResult.error?.error.message);
         }
 
-        return "https://source.unsplash.com/8xznAGy4HcY/800x400";
+        return uploadImageResult.url;
+      },
+    }),
+
+    DropZone.configure({
+      uploadFn: async (image) => {
+        const fd = new FormData();
+
+        fd.append("file", image);
+
+        const uploadImageResult = await uploadImage(fd);
+
+        if ("error" in uploadImageResult) {
+          throw new Error(uploadImageResult.error?.error.message);
+        }
+
+        return uploadImageResult.url;
       },
     }),
 

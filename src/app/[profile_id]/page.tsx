@@ -1,7 +1,7 @@
 // app/[profile_id]/page.tsx
 import { getArticlesByProfileId, getProfileById } from "@/actions";
+import { unwrap } from "@/utils/unwrap";
 import { Box } from "@yamada-ui/react";
-import { notFound } from "next/navigation";
 import ArticlesList from "../_components/ArticleList";
 import ProfileHeader from "./_components/ProfileHeader";
 
@@ -15,24 +15,10 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   const { profile_id } = params;
 
   // プロフィール情報を取得
-  const profileData = await getProfileById(profile_id);
-
-  // エラーハンドリング
-  if ("error" in profileData) {
-    if (profileData.error.error.code === "not_found") {
-      return notFound();
-    }
-
-    throw new Error(profileData.error.error.message);
-  }
+  const profileData = unwrap(await getProfileById(profile_id));
 
   // ユーザーの記事一覧を取得
-  const articlesData = await getArticlesByProfileId(profile_id, true);
-
-  // エラーハンドリング
-  if ("error" in articlesData) {
-    throw new Error(articlesData.error.error.message);
-  }
+  const articlesData = unwrap(await getArticlesByProfileId(profile_id, true));
 
   // 記事数
   const articlesCount = Array.isArray(articlesData) ? articlesData.length : 0;

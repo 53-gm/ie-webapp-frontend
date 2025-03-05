@@ -8,6 +8,7 @@ import {
   Heading1Icon,
   Heading2Icon,
   Heading3Icon,
+  ImageIcon,
   ListCollapseIcon,
   ListOrderedIcon,
   QuoteIcon,
@@ -93,6 +94,14 @@ const SlashMenuItems: Partial<SlashMenuItem>[] = [
     },
     icon: <QuoteIcon />,
     shortcut: ">",
+  },
+  {
+    title: "Image",
+    command: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).setDropZone().run();
+    },
+    icon: <ImageIcon />,
+    shortcut: "",
   },
   // {
   //   title: "Code Block",

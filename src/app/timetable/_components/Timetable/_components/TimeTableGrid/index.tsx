@@ -20,13 +20,21 @@ const TIMES_VALUE = [
 
 const TimeTableGrid: React.FC<Props> = ({ registrationsMap, onCellClick }) => {
   return (
+    // <Grid
+    //   templateColumns={{
+    //     base: "repeat(7, 180px) 60px",
+    //     md: "repeat(7, 60px) 40px",
+    //   }}
+    //   templateRows="50px repeat(5, 120px)"
+    //   gap={1}
+    // >
     <Grid
       templateColumns={{
-        base: "repeat(7, 180px) 60px",
-        md: "repeat(7, 60px) 40px",
+        base: "repeat(7, 1fr) 0.5fr",
       }}
-      templateRows="50px repeat(5, 120px)"
+      templateRows="0.5fr repeat(5, 1fr)"
       gap={1}
+      w="full"
     >
       {/* 曜日ヘッダー */}
       {DAYS.map((day) => (

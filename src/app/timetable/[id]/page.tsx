@@ -1,5 +1,6 @@
 import { getRegisteredLectureById, getTasksByLectureId } from "@/actions";
 import { auth } from "@/lib/auth";
+import { unwrap, unwrapOr } from "@/utils/unwrap";
 import { VStack } from "@yamada-ui/react";
 import { notFound } from "next/navigation";
 import LectureDetailHeader from "./_components/LectureDetailHeader";
@@ -21,27 +22,18 @@ export default async function LectureDetailPage({
     notFound();
   }
 
-  const registrationResult = await getRegisteredLectureById(id);
-  if ("error" in registrationResult) {
-    if (registrationResult.error.error.code === "not_found") {
-      notFound();
-    }
-    throw new Error(registrationResult.error.error.message);
-  }
+  const registration = unwrap(await getRegisteredLectureById(id));
+  const lecture = registration.lecture;
 
-  const lectureResult = registrationResult.lecture;
-
-  // 講義に関連するタスクを取得
-  const tasksResult = await getTasksByLectureId(lectureResult.id);
-  const tasks = "error" in tasksResult ? [] : tasksResult;
+  const tasks = unwrapOr(await getTasksByLectureId(lecture.id), []);
 
   return (
     <VStack align="start" w="full">
       {/* 講義詳細ヘッダー */}
-      <LectureDetailHeader lecture={lectureResult} />
+      <LectureDetailHeader lecture={lecture} />
 
       {/* 講義詳細タブ */}
-      <LectureDetailTabs registration={registrationResult} tasks={tasks} />
+      <LectureDetailTabs registration={registration} tasks={tasks} />
     </VStack>
   );
 }

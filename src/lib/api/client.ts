@@ -1,205 +1,88 @@
 import { auth } from "@/lib/auth";
-import { APIErrorResponse } from "@/types/api";
-import { AppError, ErrorSeverity } from "@/types/error";
 
-/*
- API通信時に発生するエラーを表すクラス
- */
-export class APIError extends Error {
-  code: string;
-  status: number;
-  details?: any;
-  appError?: Omit<AppError, "id">;
-
+export class ApiError extends Error {
   constructor(
+    public statusCode: number,
     message: string,
-    code: string = "unknown_error",
-    status: number = 500,
-    details?: any
+    public details?: any
   ) {
     super(message);
-    this.name = "APIError";
-    this.code = code;
-    this.status = status;
-    this.details = details;
+    this.name = "ApiError";
   }
+}
 
-  /**
-   * エラーオブジェクトをバックエンドの形式に変換
-   */
-  toJSON(): APIErrorResponse {
+export type ApiResult<T> = {
+  data?: T;
+  error?: {
+    message: string;
+    code: number;
+  };
+  success: boolean;
+};
+
+/**
+ * エラーハンドリングラッパー
+ */
+export async function withErrorHandling<T>(
+  action: () => Promise<T>
+): Promise<ApiResult<T>> {
+  try {
+    const data = await action();
+    return { data, success: true };
+  } catch (error) {
+    console.error("API error:", error);
+
+    if (error instanceof ApiError) {
+      return {
+        error: {
+          message: error.message,
+          code: error.statusCode,
+        },
+        success: false,
+      };
+    }
+
     return {
       error: {
-        code: this.code,
-        message: this.message,
-        status: this.status,
+        message:
+          error instanceof Error ? error.message : "不明なエラーが発生しました",
+        code: 500,
       },
-    };
-  }
-
-  /**
-   * バックエンドのエラーレスポンスからAPIErrorインスタンスを作成
-   */
-  static fromResponse(response: Response, data?: any): APIError {
-    // レスポンスからエラー情報を抽出
-    if (data && data.error) {
-      // バックエンドのエラー形式に従う場合
-      return new APIError(
-        data.error.message,
-        data.error.code,
-        data.error.status || response.status,
-        data
-      );
-    }
-
-    // 一般的なエラーの場合
-    const message =
-      data?.detail || response.statusText || "不明なエラーが発生しました";
-    let code = "unknown_error";
-
-    // HTTPステータスコードからエラーコードを推測
-    switch (response.status) {
-      case 400:
-        code = "invalid_request";
-        break;
-      case 401:
-        code = "authentication_failed";
-        break;
-      case 403:
-        code = "permission_denied";
-        break;
-      case 404:
-        code = "not_found";
-        break;
-      case 409:
-        code = "resource_conflict";
-        break;
-      case 429:
-        code = "throttled";
-        break;
-      case 500:
-        code = "server_error";
-        break;
-    }
-
-    return new APIError(message, code, response.status, data);
-  }
-
-  // AppErrorへの変換メソッド
-  toAppError(): Omit<AppError, "id"> {
-    if (this.appError) return this.appError;
-
-    let severity = ErrorSeverity.ERROR;
-    let recoverable = false;
-
-    // ステータスコードに基づく分類
-    if (this.status < 400) {
-      severity = ErrorSeverity.INFO;
-      recoverable = true;
-    } else if (this.status < 500) {
-      severity = ErrorSeverity.WARNING;
-      recoverable = true;
-    }
-
-    return {
-      code: this.code,
-      message: this.message,
-      details: this.details ? JSON.stringify(this.details) : undefined,
-      severity,
-      source: "api",
-      recoverable,
-      action:
-        this.status === 401
-          ? {
-              type: "redirect",
-              label: "再ログイン",
-              href: "/auth/login",
-            }
-          : recoverable
-          ? {
-              type: "retry",
-              label: "再試行",
-            }
-          : undefined,
+      success: false,
     };
   }
 }
 
 /**
- * APIクライアントのシングルトンクラス
+ * バックエンドAPIとの通信を行う基本関数
  */
-export class APIClient {
-  private static instance: APIClient;
-  private baseUrl: string;
+export async function fetchApi<T>(
+  endpoint: string,
+  options: RequestInit = {},
+  requireAuth = true
+): Promise<T> {
+  const baseUrl = process.env.BACKEND_URL || "";
+  const url = `${baseUrl}${endpoint}`;
 
-  private constructor() {
-    this.baseUrl = process.env.BACKEND_URL || "";
+  const headers: HeadersInit = {
+    ...((options.headers as Record<string, string>) || {}),
+  };
+
+  if (requireAuth) {
+    const session = await auth();
+    if (!session?.user?.accessToken) {
+      throw new ApiError(401, "認証が必要です。再度ログインしてください。");
+    }
+    headers["Authorization"] = `Bearer ${session.user.accessToken}`;
   }
 
-  /**
-   * APIClientのシングルトンインスタンスを取得
-   */
-  public static getInstance(): APIClient {
-    if (!APIClient.instance) {
-      APIClient.instance = new APIClient();
-    }
-    return APIClient.instance;
-  }
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers,
+    });
 
-  /**
-   * APIリクエストを実行する
-   * @param endpoint APIエンドポイント
-   * @param options フェッチオプション
-   * @param requireAuth 認証が必要かどうか
-   * @param cacheOptions キャッシュオプション
-   * @returns レスポンスデータ
-   */
-  async request<T>(
-    endpoint: string,
-    options: RequestInit = {},
-    requireAuth: boolean = false,
-    cacheOptions?: {
-      revalidate?: number | false;
-      tags?: string[];
-    }
-  ): Promise<T> {
-    const url = `${this.baseUrl}${endpoint}`;
-    const headers: HeadersInit = {
-      ...((options.headers as Record<string, string>) || {}),
-    };
-
-    if (requireAuth) {
-      const session = await auth();
-      if (!session?.user?.accessToken) {
-        throw new APIError(
-          "認証が必要です。再度ログインしてください。",
-          "authentication_required",
-          401
-        );
-      }
-      headers["Authorization"] = `Bearer ${session.user.accessToken}`;
-    }
-
-    // キャッシュオプションを適用
-    if (cacheOptions) {
-      (options as any).next = {
-        revalidate: cacheOptions.revalidate,
-        tags: cacheOptions.tags,
-      };
-    }
-
-    try {
-      const response = await fetch(url, { ...options, headers });
-      return await this.handleResponse<T>(response);
-    } catch (error) {
-      return this.handleError<T>(error);
-    }
-  }
-
-  /**
-   * APIレスポンスを処理する
-   */
-  private async handleResponse<T>(response: Response): Promise<T> {
+    // 204 No Content
     if (response.status === 204) {
       return {} as T;
     }
@@ -208,109 +91,25 @@ export class APIClient {
     try {
       data = await response.json();
     } catch (error) {
-      // JSONパースエラー
-      throw new APIError(
-        "レスポンスの解析に失敗しました",
-        "parse_error",
-        response.status
-      );
+      throw new ApiError(response.status, "レスポンスの解析に失敗しました");
     }
 
-    // エラーレスポンスの場合
     if (!response.ok) {
-      throw APIError.fromResponse(response, data);
+      const errorMessage =
+        data?.error?.message ||
+        response.statusText ||
+        "リクエストに失敗しました";
+      throw new ApiError(response.status, errorMessage, data);
     }
 
     return data as T;
-  }
-
-  /**
-   * APIエラーハンドリング
-   */
-  private handleError<T>(error: unknown): Promise<T> {
-    if (error instanceof APIError) {
-      console.warn(
-        `APIエラー: ${error.code} (${error.status})`,
-        error.message,
-        error.details
-      );
-    } else {
-      console.warn("不明なエラー:", error);
-      error = new APIError(
-        error instanceof Error ? error.message : "不明なエラーが発生しました",
-        "unknown_error",
-        500
-      );
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
     }
-    throw error;
-  }
-
-  // 便利なヘルパーメソッド
-  async get<T>(
-    endpoint: string,
-    requireAuth: boolean = false,
-    cacheOptions?: any
-  ): Promise<T> {
-    return this.request<T>(
-      endpoint,
-      { method: "GET" },
-      requireAuth,
-      cacheOptions
+    throw new ApiError(
+      500,
+      error instanceof Error ? error.message : "不明なエラーが発生しました"
     );
-  }
-
-  async post<T>(
-    endpoint: string,
-    data: any,
-    requireAuth: boolean = false
-  ): Promise<T> {
-    return this.request<T>(
-      endpoint,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      },
-      requireAuth
-    );
-  }
-
-  async put<T>(
-    endpoint: string,
-    data: any,
-    requireAuth: boolean = false
-  ): Promise<T> {
-    return this.request<T>(
-      endpoint,
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      },
-      requireAuth
-    );
-  }
-
-  async patch<T>(
-    endpoint: string,
-    data: any,
-    requireAuth: boolean = false
-  ): Promise<T> {
-    return this.request<T>(
-      endpoint,
-      {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      },
-      requireAuth
-    );
-  }
-
-  async delete<T>(endpoint: string, requireAuth: boolean = false): Promise<T> {
-    return this.request<T>(endpoint, { method: "DELETE" }, requireAuth);
   }
 }
-
-// エクスポート用の便利なインスタンス
-export const apiClient = APIClient.getInstance();
