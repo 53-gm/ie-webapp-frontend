@@ -44,7 +44,8 @@ export const DBlockNodeView: React.FC<NodeViewProps> = ({
           opacity="0"
           _groupHover={{ opacity: 100 }}
           transition="md"
-          style={{ transform: "translateX(-140%)" }}
+          style={{ transform: "translateX(-110%)" }}
+          gap="xs"
         >
           <IconButton
             variant="ghost"

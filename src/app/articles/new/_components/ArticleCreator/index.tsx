@@ -1,11 +1,10 @@
-// src/app/[profile_id]/articles/[slug]/edit/ArticleEditor.tsx
+// src/app/articles/new/ArticleCreator.tsx
 "use client";
 
-import { updateArticle } from "@/actions";
+import { createArticle } from "@/actions";
 import { getExtensions } from "@/lib/tiptap/extensions";
 import { CustomBubbleMenu, LinkBubbleMenu } from "@/lib/tiptap/menus";
-import { Article } from "@/types/api";
-import { format } from "@formkit/tempo";
+import { unwrap } from "@/utils/unwrap";
 import { EditorContent, useEditor } from "@tiptap/react";
 import { ArrowLeftIcon, SaveIcon } from "@yamada-ui/lucide";
 import {
@@ -16,39 +15,29 @@ import {
   HStack,
   Input,
   Switch,
-  Text,
   useNotice,
   VStack,
 } from "@yamada-ui/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
-interface ArticleEditorProps {
-  article: Article;
+interface ArticleCreatorProps {
+  profileId: string;
 }
 
-export default function ArticleEditor({ article }: ArticleEditorProps) {
-  const [title, setTitle] = useState(article.title);
-  const [isPublic, setIsPublic] = useState(article.is_public);
+export default function ArticleCreator({ profileId }: ArticleCreatorProps) {
+  const [title, setTitle] = useState("");
+  const [isPublic, setIsPublic] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const notice = useNotice();
   const router = useRouter();
 
-  // 記事の表示ページへのパス
-  const viewPath = `/${article.author.profile_id}/articles/${article.slug}`;
-
-  // 日付フォーマット
-  const formattedDate = format(article.created_at, "short", "ja");
-  const formattedUpdateDate =
-    article.updated_at !== article.created_at
-      ? format(article.updated_at, "short", "ja")
-      : null;
-
   // エディタの設定
   const editor = useEditor({
     extensions: getExtensions(),
-    content: null,
     editable: true,
+    immediatelyRender: false,
+    content: "",
     editorProps: {
       attributes: {
         class: "focus:outline-none w-full",
@@ -57,43 +46,38 @@ export default function ArticleEditor({ article }: ArticleEditorProps) {
     },
   });
 
-  // 記事内容を設定
-  useEffect(() => {
-    if (editor && article.content) {
-      try {
-        const content = JSON.parse(article.content);
-        editor.commands.setContent(content);
-      } catch (error) {
-        console.error("記事内容の解析に失敗しました:", error);
-        editor.commands.setContent("<p>記事の内容を読み込めませんでした</p>");
-      }
-    }
-  }, [editor, article.content]);
-
-  // 記事を保存
+  // 新しい記事を保存
   const saveArticle = async () => {
-    if (!editor) return;
+    if (!editor || !title.trim()) {
+      notice({
+        title: "エラー",
+        description: "タイトルを入力してください",
+        status: "error",
+      });
+      return;
+    }
 
     setIsSaving(true);
 
     try {
       const editorContent = JSON.stringify(editor.getJSON());
 
-      await updateArticle(article.slug, {
-        title,
-        content: editorContent,
-        is_public: isPublic,
-      });
+      const result = unwrap(
+        await createArticle({
+          title: title.trim(),
+          content: editorContent,
+          is_public: isPublic,
+        })
+      );
 
       notice({
         title: "成功",
-        description: "記事を更新しました",
+        description: "記事を作成しました",
         status: "success",
       });
 
-      // 記事の表示ページにリダイレクト
-      router.push(viewPath);
-      router.refresh();
+      // 作成した記事の表示ページにリダイレクト
+      router.push(`/${profileId}/articles/${result.slug}`);
     } catch (error: any) {
       notice({
         title: "エラー",
@@ -106,8 +90,8 @@ export default function ArticleEditor({ article }: ArticleEditorProps) {
   };
 
   const handleCancel = () => {
-    // 変更を破棄して記事表示ページに戻る
-    router.push(viewPath);
+    // キャンセルして記事一覧ページに戻る
+    router.push("/articles");
   };
 
   if (!editor) {
@@ -116,7 +100,7 @@ export default function ArticleEditor({ article }: ArticleEditorProps) {
 
   return (
     <VStack w="full" align="start">
-      {/* 編集ヘッダー部分 */}
+      {/* ヘッダー部分 */}
       <VStack
         as="header"
         pt={8}
@@ -126,14 +110,14 @@ export default function ArticleEditor({ article }: ArticleEditorProps) {
         w="full"
         align="start"
       >
-        <Heading size="md">記事の編集</Heading>
+        <Heading size="md">新しい記事を作成</Heading>
 
         {/* タイトル入力 */}
-        <FormControl>
+        <FormControl isRequired>
           <Input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="タイトル"
+            placeholder="タイトルを入力してください"
             size="lg"
             fontSize="2xl"
             fontWeight="bold"
@@ -142,18 +126,9 @@ export default function ArticleEditor({ article }: ArticleEditorProps) {
 
         {/* 公開設定とアクション */}
         <HStack w="full" justify="space-between">
-          <HStack>
-            <Switch
-              isChecked={isPublic}
-              onChange={() => setIsPublic(!isPublic)}
-            >
-              公開する
-            </Switch>
-            <Text color="gray.500" fontSize="sm">
-              {formattedDate}に作成
-              {formattedUpdateDate && `、${formattedUpdateDate}に更新`}
-            </Text>
-          </HStack>
+          <Switch isChecked={isPublic} onChange={() => setIsPublic(!isPublic)}>
+            公開する
+          </Switch>
 
           <HStack>
             <Button
@@ -167,17 +142,17 @@ export default function ArticleEditor({ article }: ArticleEditorProps) {
               leftIcon={<SaveIcon />}
               colorScheme="blue"
               isLoading={isSaving}
-              loadingText="保存中"
+              loadingText="作成中"
               onClick={saveArticle}
             >
-              保存
+              作成
             </Button>
           </HStack>
         </HStack>
       </VStack>
 
       {/* エディタ本体 */}
-      <Box as="article" py={4} w="full" minH="50vh">
+      <Box as="article" py={4} w="full" minH="100vh">
         <EditorContent editor={editor} />
         <CustomBubbleMenu editor={editor} />
         <LinkBubbleMenu editor={editor} />

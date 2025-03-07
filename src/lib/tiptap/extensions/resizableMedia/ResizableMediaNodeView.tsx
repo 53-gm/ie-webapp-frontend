@@ -1,3 +1,4 @@
+import { NodeSelection } from "@tiptap/pm/state";
 import { NodeViewProps, NodeViewWrapper } from "@tiptap/react";
 import {
   AlignCenterIcon,
@@ -13,11 +14,13 @@ export const ResizableMediaNodeView = ({
   updateAttributes,
   deleteNode,
   editor,
+  getPos,
 }: NodeViewProps) => {
   const [mediaType, setMediaType] = useState<"img" | "video">();
   const [aspectRatio, setAspectRatio] = useState(1);
   const mediaRef = useRef<HTMLImageElement | HTMLVideoElement>(null);
   const resizeHandleRef = useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
   // 初期化
   useEffect(() => {
@@ -68,6 +71,19 @@ export const ResizableMediaNodeView = ({
       }
     };
   }, [mediaRef, mediaType, setMediaAspectRatio]);
+
+  // ドラッグハンドラー
+  const handleDragStart = (e: React.DragEvent) => {
+    // ドラッグ中のノード情報を設定
+    if (typeof getPos === "function") {
+      const { state } = editor;
+      const pos = getPos();
+
+      // NodeSelectionを使用して選択状態を設定
+      const nodeSelection = NodeSelection.create(state.doc, pos);
+      editor.view.dispatch(state.tr.setSelection(nodeSelection));
+    }
+  };
 
   // リサイズ機能
   useEffect(() => {
@@ -171,7 +187,7 @@ export const ResizableMediaNodeView = ({
   const isEditable = editor.isEditable;
 
   return (
-    <NodeViewWrapper>
+    <NodeViewWrapper ref={wrapperRef} data-drag-handle>
       <Box
         className={`media-wrapper relative group ${getAlignmentClass()}`}
         my={4}
@@ -186,6 +202,9 @@ export const ResizableMediaNodeView = ({
             width={node.attrs.width}
             height={node.attrs.height}
             style={{ maxWidth: "100%", borderRadius: "0.375rem" }}
+            draggable={isEditable}
+            onDragStart={handleDragStart}
+            data-drag-handle
           />
         )}
 
@@ -196,6 +215,9 @@ export const ResizableMediaNodeView = ({
             width={node.attrs.width}
             height={node.attrs.height}
             style={{ maxWidth: "100%", borderRadius: "0.375rem" }}
+            draggable={isEditable}
+            onDragStart={handleDragStart}
+            data-drag-handle
           >
             <source src={node.attrs.src} />
           </video>

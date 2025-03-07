@@ -1,8 +1,8 @@
 import { mergeAttributes, Node, nodeInputRule } from "@tiptap/core";
 import { ReactNodeViewRenderer } from "@tiptap/react";
-
-import { getMediaPasteDropPlugin, UploadFnType } from "./mediaPasteDropPlugin";
 import { ResizableMediaNodeView } from "./ResizableMediaNodeView";
+
+export type UploadFnType = (image: File) => Promise<string>;
 
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
@@ -195,9 +195,5 @@ export const ResizableMedia = Node.create<MediaOptions>({
         },
       }),
     ];
-  },
-
-  addProseMirrorPlugins() {
-    return [getMediaPasteDropPlugin(this.options.uploadFn)];
   },
 });

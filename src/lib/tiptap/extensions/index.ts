@@ -1,4 +1,5 @@
 import { uploadImage } from "@/actions";
+import { unwrap } from "@/utils/unwrap";
 import { AnyExtension } from "@tiptap/core";
 import Blockquote from "@tiptap/extension-blockquote";
 import Bold from "@tiptap/extension-bold";
@@ -6,7 +7,6 @@ import BulletList from "@tiptap/extension-bullet-list";
 import DropCursor from "@tiptap/extension-dropcursor";
 import GapCursor from "@tiptap/extension-gapcursor";
 import HardBreak from "@tiptap/extension-hard-break";
-import Heading from "@tiptap/extension-heading";
 import History from "@tiptap/extension-history";
 import Italic from "@tiptap/extension-italic";
 import ListItem from "@tiptap/extension-list-item";
@@ -14,6 +14,7 @@ import OrderedList from "@tiptap/extension-ordered-list";
 import Strike from "@tiptap/extension-strike";
 import Text from "@tiptap/extension-text";
 import Underline from "@tiptap/extension-underline";
+import { CustomHeading } from "./customHeading";
 import { DBlock } from "./dBlock";
 import { Document } from "./doc";
 import { DropZone } from "./dropzone/dropzone";
@@ -54,9 +55,10 @@ export const getExtensions = (): AnyExtension[] => {
     ListItem,
     BulletList,
     OrderedList,
-    Heading.configure({
-      levels: [1, 2, 3],
-    }),
+    // Heading.configure({
+    //   levels: [1, 2, 3],
+    // }),
+    CustomHeading.configure({ levels: [1, 2, 3] }),
     TrailingNode,
     Blockquote,
 
@@ -67,13 +69,9 @@ export const getExtensions = (): AnyExtension[] => {
 
         fd.append("file", image);
 
-        const uploadImageResult = await uploadImage(fd);
+        const { url } = unwrap(await uploadImage(fd));
 
-        if ("error" in uploadImageResult) {
-          throw new Error(uploadImageResult.error?.error.message);
-        }
-
-        return uploadImageResult.url;
+        return url;
       },
     }),
 
@@ -83,13 +81,9 @@ export const getExtensions = (): AnyExtension[] => {
 
         fd.append("file", image);
 
-        const uploadImageResult = await uploadImage(fd);
+        const { url } = unwrap(await uploadImage(fd));
 
-        if ("error" in uploadImageResult) {
-          throw new Error(uploadImageResult.error?.error.message);
-        }
-
-        return uploadImageResult.url;
+        return url;
       },
     }),
 

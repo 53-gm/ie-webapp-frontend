@@ -79,3 +79,16 @@ export async function updateArticle(
     );
   });
 }
+
+export async function uploadImage(data: FormData) {
+  return withErrorHandling(async () => {
+    return await fetchApi<{ url: string }>(
+      `/api/v1/articles/upload_image/`,
+      {
+        method: "POST",
+        body: data,
+      },
+      true
+    );
+  });
+}

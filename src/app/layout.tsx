@@ -1,10 +1,11 @@
-import DesktopNav from "@/app/_components/DesktopNav";
 import Header from "@/app/_components/Header";
 import "@/lib/tiptap/styles/tiptap.css";
-import { Center, VStack } from "@yamada-ui/react";
+import { Center, HStack, VStack } from "@yamada-ui/react";
 import type { Metadata } from "next";
 import { Zen_Kaku_Gothic_New } from "next/font/google";
 import { ReactNode } from "react";
+import DesktopNav from "./_components/DesktopNav";
+import Footer from "./_components/Footer";
 import YamadaUIProvider from "./_components/YamadaUIProvider";
 import "./globals.css";
 
@@ -54,22 +55,27 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="ja">
       <body className={ZenKakuGothicNewFont.className}>
         <YamadaUIProvider>
-          <DesktopNav />
-          <VStack px={{ base: "2xl", sm: "xs" }} minH="100vh">
-            <Header />
-            <Center as="main" w="full">
-              <VStack
-                w="full"
-                gap={{ base: "lg", md: "md" }}
-                py="lg"
-                px={{ base: "lg", md: "md" }}
-                maxW="6xl"
-                alignItems="center"
-              >
-                {children}
-              </VStack>
-            </Center>
-          </VStack>
+          <Center>
+            <VStack minH="100vh" maxW="9xl">
+              <Header />
+
+              <HStack w="full" alignItems="stretch">
+                <DesktopNav />
+
+                <VStack
+                  w="full"
+                  gap={{ base: "lg", md: "md" }}
+                  py="lg"
+                  px={{ base: "lg", md: "md" }}
+                  alignItems="center"
+                  as="main"
+                >
+                  {children}
+                </VStack>
+              </HStack>
+            </VStack>
+          </Center>
+          <Footer />
         </YamadaUIProvider>
       </body>
     </html>

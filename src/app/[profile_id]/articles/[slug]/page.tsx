@@ -1,11 +1,12 @@
-// app/[profile_id]/articles/[slug]/page.tsx
+// src/app/[profile_id]/articles/[slug]/page.tsx
 import { getArticleByAuthorAndSlug, getArticlesByProfileId } from "@/actions";
 import ArticlesList from "@/app/_components/ArticleList";
 import { auth } from "@/lib/auth";
 import { Article } from "@/types/api";
 import { unwrap } from "@/utils/unwrap";
 import { Separator } from "@yamada-ui/react";
-import ArticleEditor from "./_components/ArticleEditor";
+import { notFound } from "next/navigation";
+import ArticleViewer from "./_components/ArticleViewer";
 
 interface ArticlePageProps {
   params: {
@@ -24,16 +25,25 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   const session = await auth();
   const currentUser = session?.user;
 
+  // アクセス権のチェック：非公開記事は著者のみ閲覧可能
+  if (
+    !articleData.is_public &&
+    (!currentUser || currentUser.profile.profile_id !== profile_id)
+  ) {
+    notFound();
+  }
+
   // 著者の他の記事を取得
-  const otherArticlesData = await getArticlesByProfileId(profile_id, true);
-
-  // 現在の記事を除外した関連記事を取得
   let relatedArticles: Article[] = [];
-
-  if (!("error" in otherArticlesData) && Array.isArray(otherArticlesData)) {
-    relatedArticles = otherArticlesData
-      .filter((article) => article.slug !== slug)
-      .slice(0, 4); // 最大4件まで
+  try {
+    const otherArticlesData = await getArticlesByProfileId(profile_id, true);
+    if ("data" in otherArticlesData && Array.isArray(otherArticlesData.data)) {
+      relatedArticles = otherArticlesData.data
+        .filter((article) => article.slug !== slug)
+        .slice(0, 4); // 最大4件まで
+    }
+  } catch (error) {
+    console.error("関連記事の取得に失敗しました:", error);
   }
 
   // ユーザーが著者かどうかを確認
@@ -42,13 +52,13 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
   return (
     <>
-      {/* 記事エディター/ビューワー */}
-      <ArticleEditor article={articleData} isAuthor={isAuthor} />
+      {/* 記事表示コンポーネント */}
+      <ArticleViewer article={articleData} isAuthor={isAuthor} />
 
       {/* 関連記事セクション */}
       {relatedArticles.length > 0 && (
         <>
-          <Separator />
+          <Separator my={8} />
           <ArticlesList articles={relatedArticles} title="著者の他の記事" />
         </>
       )}

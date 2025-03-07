@@ -1,4 +1,4 @@
-import { Profile } from "@/app/_services/type";
+import { UserProfile } from "@/types/api";
 import NextAuth from "next-auth";
 import "next-auth/jwt";
 
@@ -117,7 +117,7 @@ declare module "next-auth" {
   interface User {
     accessToken?: string;
     refreshToken?: string;
-    profile: Profile;
+    profile: UserProfile;
   }
 }
 
@@ -126,6 +126,6 @@ declare module "next-auth/jwt" {
     accessToken?: string;
     refreshToken?: string;
     expire?: number;
-    profile: Profile;
+    profile: UserProfile;
   }
 }
