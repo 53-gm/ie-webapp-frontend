@@ -56,13 +56,15 @@ export function TimeTable() {
     setSelectedDay(day);
     setSelectedTime(time);
 
-    const registration = registrationsMap.get((day - 1) * 5 + time);
+    // const registration = registrationsMap.get((day - 1) * 5 + time);
 
-    if (registration) {
-      router.push(`/timetable/${registration.id}`);
-    } else {
-      onOpen();
-    }
+    // if (registration) {
+    //   router.push(`/timetable/${registration.id}`);
+    // } else {
+    //   onOpen();
+    // }
+
+    router.push(`/timetable/${year}/${term}/${(day - 1) * 5 + time}`);
   };
 
   return (

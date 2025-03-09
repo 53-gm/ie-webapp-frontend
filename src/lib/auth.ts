@@ -2,7 +2,7 @@ import { UserProfile } from "@/types/api";
 import NextAuth from "next-auth";
 import "next-auth/jwt";
 
-import Google from "next-auth/providers/google";
+import MicrosoftEntraID from "next-auth/providers/microsoft-entra-id";
 
 const BACKEND_ACCESS_TOKEN_LIFETIME = 60 * 60; // 60 minutes
 const BACKEND_REFRESH_TOKEN_LIFETIME = 30 * 24 * 60 * 60; // 30 days
@@ -13,27 +13,25 @@ const getCurrentEpochTime = () => {
 
 export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
   providers: [
-    Google({
-      authorization: { params: { access_type: "offline" } },
+    MicrosoftEntraID({
+      authorization: {
+        params: {
+          scope: "openid profile email offline_access User.Read",
+        },
+      },
     }),
   ],
-  basePath: "/api/auth",
-  session: { strategy: "jwt" },
   pages: {
     signIn: "/auth/login",
   },
   callbacks: {
-    authorized: async ({ auth }) => {
-      // Logged in users are authenticated, otherwise redirect to login page
-      return !!auth;
-    },
     async signIn({ user, account, profile, email, credentials }) {
-      if (account?.provider === "google") {
+      if (account?.provider === "microsoft-entra-id") {
         const { access_token, id_token } = account;
 
         try {
           const response = await fetch(
-            `${process.env.BACKEND_URL}/api/v1/auth/google/`,
+            `${process.env.BACKEND_URL}/api/v1/auth/microsoft/`,
             {
               method: "POST",
               body: JSON.stringify({ access_token, id_token }),

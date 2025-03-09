@@ -135,7 +135,9 @@ export default function ArticleViewer({
       {/* 記事本文部分 */}
       <Box as="article" py={4} w="full" minH="100vh">
         <HStack alignItems="stretch" gap="lg">
-          <EditorContent editor={editor} />
+          <Box w="full">
+            <EditorContent editor={editor} />
+          </Box>
           <Box w="sm">
             <TableOfContents editor={editor} />
           </Box>

@@ -3,6 +3,7 @@
 
 import { createArticle } from "@/actions";
 import { getExtensions } from "@/lib/tiptap/extensions";
+import { TableOfContents } from "@/lib/tiptap/extensions/TableOfContents";
 import { CustomBubbleMenu, LinkBubbleMenu } from "@/lib/tiptap/menus";
 import { unwrap } from "@/utils/unwrap";
 import { EditorContent, useEditor } from "@tiptap/react";
@@ -153,7 +154,14 @@ export default function ArticleCreator({ profileId }: ArticleCreatorProps) {
 
       {/* エディタ本体 */}
       <Box as="article" py={4} w="full" minH="100vh">
-        <EditorContent editor={editor} />
+        <HStack alignItems="stretch" gap="lg">
+          <Box w="full">
+            <EditorContent editor={editor} />
+          </Box>
+          <Box w="sm">
+            <TableOfContents editor={editor} />
+          </Box>
+        </HStack>
         <CustomBubbleMenu editor={editor} />
         <LinkBubbleMenu editor={editor} />
       </Box>

@@ -7,7 +7,7 @@ type Props = {
   onCellClick: (day: number, time: number) => void;
 };
 
-const DAYS = [1, 2, 3, 4, 5, 6, 7];
+const DAYS = [1, 2, 3, 4, 5];
 const TIMES = [1, 2, 3, 4, 5];
 const MAX_TIME = 5;
 const TIMES_VALUE = [
@@ -30,11 +30,12 @@ const TimeTableGrid: React.FC<Props> = ({ registrationsMap, onCellClick }) => {
     // >
     <Grid
       templateColumns={{
-        base: "repeat(7, 1fr) 0.5fr",
+        base: "repeat(5, 3fr) 1fr",
       }}
-      templateRows="0.5fr repeat(5, 1fr)"
+      templateRows="1fr repeat(5, 2fr)"
       gap={1}
       w="full"
+      minH="75vh"
     >
       {/* 曜日ヘッダー */}
       {DAYS.map((day) => (

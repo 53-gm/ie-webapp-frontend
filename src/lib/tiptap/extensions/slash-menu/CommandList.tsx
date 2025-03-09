@@ -111,8 +111,10 @@ export const CommandList = React.forwardRef(
         w="xs"
         rounded="md"
         shadow="md"
+        bgColor="whitesmoke"
         justifyItems="center"
         ref={scrollAreaRef}
+        zIndex={10}
       >
         <VStack gap="none">
           {items.length ? (

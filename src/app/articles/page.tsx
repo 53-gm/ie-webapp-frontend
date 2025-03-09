@@ -126,7 +126,7 @@ export default async function ArticlesPage({
             )}
             {currentUser && (
               <Link href="/articles/new" passHref>
-                <Button as="a" colorScheme="blue" leftIcon={<PlusIcon />}>
+                <Button colorScheme="blue" leftIcon={<PlusIcon />}>
                   新しい記事を書く
                 </Button>
               </Link>

@@ -3,6 +3,7 @@
 
 import { updateArticle } from "@/actions";
 import { getExtensions } from "@/lib/tiptap/extensions";
+import { TableOfContents } from "@/lib/tiptap/extensions/TableOfContents";
 import { CustomBubbleMenu, LinkBubbleMenu } from "@/lib/tiptap/menus";
 import { Article } from "@/types/api";
 import { format } from "@formkit/tempo";
@@ -178,7 +179,14 @@ export default function ArticleEditor({ article }: ArticleEditorProps) {
 
       {/* エディタ本体 */}
       <Box as="article" py={4} w="full" minH="50vh">
-        <EditorContent editor={editor} />
+        <HStack alignItems="stretch" gap="lg">
+          <Box w="full">
+            <EditorContent editor={editor} />
+          </Box>
+          <Box w="sm">
+            <TableOfContents editor={editor} />
+          </Box>
+        </HStack>
         <CustomBubbleMenu editor={editor} />
         <LinkBubbleMenu editor={editor} />
       </Box>

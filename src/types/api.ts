@@ -171,7 +171,7 @@ export interface CreateTaskInput {
   lecture_id?: string;
   title: string;
   description?: string;
-  due_date?: string | null;
+  due_date?: Date | null;
   priority?: number;
   status?: number;
 }

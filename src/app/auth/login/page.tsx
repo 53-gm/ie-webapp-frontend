@@ -22,12 +22,12 @@ export default function LoginPage(props: {
           <form
             action={async () => {
               "use server";
-              await signIn("google", {
+              await signIn("microsoft-entra-id", {
                 redirectTo: props.searchParams.callbackUrl ?? "",
               });
             }}
           >
-            <Button type="submit">Googleログイン</Button>
+            <Button type="submit">Microsoftログイン</Button>
           </form>
 
           <form

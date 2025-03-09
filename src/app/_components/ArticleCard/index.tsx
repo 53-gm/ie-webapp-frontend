@@ -43,6 +43,8 @@ export default function ArticleCard({ article }: ArticleCardProps) {
       overflow="hidden"
       border="1px solid"
       borderColor="gray.200"
+      w="full"
+      h="full"
     >
       <CardBody p={0}>
         <VStack w="full" gap="xs">
@@ -57,7 +59,7 @@ export default function ArticleCard({ article }: ArticleCardProps) {
               </Heading>
 
               {previewText && (
-                <Text color="gray.600" fontSize="sm" mb={3}>
+                <Text color="gray.600" fontSize="sm" mb={3} lineClamp={3}>
                   {previewText}
                 </Text>
               )}

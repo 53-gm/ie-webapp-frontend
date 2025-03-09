@@ -31,7 +31,7 @@ export default function ArticlesList({
           w="full"
         >
           {articles.map((article) => (
-            <GridItem key={article.slug} w="full">
+            <GridItem key={article.slug}>
               <ArticleCard article={article} />
             </GridItem>
           ))}

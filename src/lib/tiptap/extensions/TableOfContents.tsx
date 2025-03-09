@@ -1,6 +1,7 @@
 import { Editor } from "@tiptap/react";
-import { Badge, Box, Heading, Text, VStack } from "@yamada-ui/react";
-import React, { useCallback, useEffect, useState } from "react";
+import { Box, Heading, HStack, Text, VStack } from "@yamada-ui/react";
+import { useRouter } from "next/navigation";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
 interface TocItem {
   id: string;
@@ -14,6 +15,9 @@ interface TableOfContentsProps {
 
 export const TableOfContents: React.FC<TableOfContentsProps> = ({ editor }) => {
   const [tocItems, setTocItems] = useState<TocItem[]>([]);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const router = useRouter();
 
   // デバウンス関数
   const debounce = (func: Function, wait: number) => {
@@ -30,17 +34,8 @@ export const TableOfContents: React.FC<TableOfContentsProps> = ({ editor }) => {
 
     const items: TocItem[] = [];
 
-    // コンソールでデバッグ情報を表示
-    console.log("目次更新を開始します...");
-
     editor.view.state.doc.descendants((node, pos) => {
       if (node.type.name === "heading") {
-        console.log("見出し検出:", {
-          text: node.textContent,
-          attrs: node.attrs,
-          pos,
-        });
-
         items.push({
           id: node.attrs.id || "",
           level: node.attrs.level,
@@ -49,9 +44,68 @@ export const TableOfContents: React.FC<TableOfContentsProps> = ({ editor }) => {
       }
     });
 
-    console.log("検出された見出し数:", items.length);
     setTocItems(items);
   }, [editor]);
+
+  // スクロール時のアクティブ見出し検出
+  const setupIntersectionObserver = useCallback(() => {
+    if (!editor || typeof window === "undefined") return;
+
+    // 既存のObserverをクリーンアップ
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+    }
+
+    // 要素がビューポートに入ったときに呼び出される関数
+    const handleIntersect = (entries: IntersectionObserverEntry[]) => {
+      // 交差している要素をチェック
+      const intersectingEntries = entries.filter(
+        (entry) => entry.isIntersecting
+      );
+
+      // 交差している要素がある場合、最初の要素をアクティブに
+      if (intersectingEntries.length > 0) {
+        const newActiveId = intersectingEntries[0].target.id;
+        setActiveId(newActiveId);
+
+        // URLを更新（履歴を残さずにステート更新）
+        if (window.history) {
+          const newUrl =
+            window.location.pathname +
+            window.location.search +
+            (newActiveId ? `#${newActiveId}` : "");
+          window.history.replaceState(null, "", newUrl);
+        }
+      }
+    };
+
+    // IntersectionObserverのオプション
+    const options = {
+      root: null, // ビューポート
+      rootMargin: "-80px 0px -80% 0px", // 上部に少し余裕を持たせる
+      threshold: 0, // 少しでも見えたら発火
+    };
+
+    // IntersectionObserverの作成
+    observerRef.current = new IntersectionObserver(handleIntersect, options);
+
+    // 監視対象の要素を登録
+    setTimeout(() => {
+      // DOMが更新された後に実行
+      tocItems.forEach((item) => {
+        if (item.id) {
+          const element = document.getElementById(item.id);
+          if (element) {
+            observerRef.current?.observe(element);
+          }
+        }
+      });
+    }, 100);
+
+    return () => {
+      observerRef.current?.disconnect();
+    };
+  }, [editor, tocItems]);
 
   useEffect(() => {
     if (!editor) return;
@@ -72,6 +126,29 @@ export const TableOfContents: React.FC<TableOfContentsProps> = ({ editor }) => {
     };
   }, [editor, updateToc]);
 
+  // 目次アイテムが変更されたらIntersectionObserverを再設定
+  useEffect(() => {
+    setupIntersectionObserver();
+
+    // ページロード時にURLのハッシュがあれば対応する要素にスクロール
+    const hash = window.location.hash;
+    if (hash && hash.startsWith("#")) {
+      const targetId = hash.substring(1);
+      const element = document.getElementById(targetId);
+      if (element) {
+        // スムーズにスクロール
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: "smooth" });
+          setActiveId(targetId);
+        }, 300);
+      }
+    }
+
+    return () => {
+      observerRef.current?.disconnect();
+    };
+  }, [tocItems, setupIntersectionObserver]);
+
   // 見出しクリック時のハンドラ - スムーズスクロール
   const handleItemClick = (id: string) => {
     if (!id) {
@@ -84,64 +161,92 @@ export const TableOfContents: React.FC<TableOfContentsProps> = ({ editor }) => {
 
     const element = document.getElementById(targetId);
     if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
+      // スクロール前にアクティブIDを設定
+      setActiveId(targetId);
 
-      // クリック時にハイライト効果を追加（オプション）
-      element.classList.add("heading-highlight");
-      setTimeout(() => {
-        element.classList.remove("heading-highlight");
-      }, 2000);
+      // Next.jsのルーターでURLを更新（オプション）
+      // router.push(`${window.location.pathname}#${targetId}`, { scroll: false });
+
+      // または、window.historyを使用
+      const newUrl =
+        window.location.pathname + window.location.search + `#${targetId}`;
+      window.history.pushState(null, "", newUrl);
+
+      // スムーズにスクロール
+      element.scrollIntoView({ behavior: "smooth" });
     } else {
       console.warn(`ID: ${targetId} の要素が見つかりません`);
     }
   };
 
+  // 見出しレベルに基づいてマーカーサイズを取得
+  const getMarkerSize = (level: number): number => {
+    switch (level) {
+      case 1:
+        return 10; // h1
+      case 2:
+        return 8; // h2
+      default:
+        return 6; // h3以下
+    }
+  };
+
   if (tocItems.length === 0) {
-    return (
-      <Box p={4} borderWidth="1px" borderRadius="md" bg="gray.50">
-        <Text fontSize="sm" color="gray.500">
-          目次がありません。見出しを追加してください。
-        </Text>
-      </Box>
-    );
+    return <></>;
   }
 
   return (
     <Box
       p={4}
-      borderWidth="1px"
       borderRadius="md"
-      boxShadow="sm"
       bg="white"
-      pos="sticky"
-      inset="md"
+      borderColor="gray.100"
+      borderWidth="1px"
+      boxShadow="sm"
+      position="sticky"
+      top="16px"
+      maxHeight="calc(100vh - 150px)"
+      overflowY="auto"
+      className="zenn-toc"
     >
-      <Heading size="md" mb={4}>
+      <Heading size="md" mb={4} fontWeight="bold" fontSize="md">
         目次
       </Heading>
-      <VStack align="start">
-        {tocItems.map((item, index) => (
-          <Box key={index} w="full">
-            <Text
-              fontSize={item.level === 1 ? "md" : "sm"}
-              fontWeight={item.level === 1 ? "bold" : "normal"}
-              ml={`${(item.level - 1) * 16}px`}
-              color={item.id ? "blue.600" : "gray.400"}
-              cursor={item.id ? "pointer" : "not-allowed"}
-              _hover={{ textDecoration: item.id ? "underline" : "none" }}
-              onClick={() => item.id && handleItemClick(item.id)}
-              display="inline-flex"
-              alignItems="center"
-            >
-              {item.text}
-              {!item.id && (
-                <Badge ml={2} colorScheme="red" size="sm">
-                  ID未設定
-                </Badge>
-              )}
-            </Text>
-          </Box>
-        ))}
+
+      <VStack align="start" position="relative">
+        {tocItems.map((item, index) => {
+          const isActive = item.id === activeId;
+          const markerSize = getMarkerSize(item.level);
+
+          return (
+            <HStack key={index} gap="sm" pl={(item.level - 1) * 3}>
+              {/* マーカー（アクティブな項目のみ青色） */}
+              <Box
+                width={`${markerSize}px`}
+                height={`${markerSize}px`}
+                borderRadius="full"
+                bg={isActive ? "blue.400" : "blue.100"}
+                zIndex={1}
+              />
+
+              <Text
+                fontSize="sm"
+                fontWeight={isActive ? "bold" : "normal"}
+                color={isActive ? "gray.900" : "gray.500"}
+                transition="all 0.2s ease"
+                cursor={item.id ? "pointer" : "not-allowed"}
+                onClick={() => item.id && handleItemClick(item.id)}
+              >
+                {item.text}
+                {!item.id && (
+                  <Text as="span" ml={1} fontSize="xs" color="gray.400">
+                    (ID未設定)
+                  </Text>
+                )}
+              </Text>
+            </HStack>
+          );
+        })}
       </VStack>
     </Box>
   );

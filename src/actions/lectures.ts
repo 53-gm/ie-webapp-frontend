@@ -85,6 +85,20 @@ export async function getRegisteredLectures(year: number, term: number) {
   });
 }
 
+export async function getRegistrationBySchedule(
+  year: number,
+  term: number,
+  schedule: number
+) {
+  return withErrorHandling(async () => {
+    return await fetchApi<Registration[]>(
+      `/api/v1/academics/registrations/?year=${year}&number=${term}&schedules=${schedule}`,
+      { method: "GET" },
+      true
+    );
+  });
+}
+
 export async function getRegisteredLectureById(id: string) {
   return withErrorHandling(async () => {
     return await fetchApi<Registration>(

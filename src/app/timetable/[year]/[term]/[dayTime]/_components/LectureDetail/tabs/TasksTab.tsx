@@ -1,5 +1,10 @@
+import CreateTaskForm from "@/app/_components/Task/CreateTaskForm";
+import DeleteCompletedTasksDialog from "@/app/_components/Task/DeleteCompletedTasksDialog";
+import DeleteTaskDialog from "@/app/_components/Task/DeleteTaskDialog";
+import EditTaskModal from "@/app/_components/Task/EditTaskModal";
+import TaskItem from "@/app/_components/Task/TaskItem";
 import { Task } from "@/types/api";
-import { PlusIcon, TrashIcon } from "@yamada-ui/lucide";
+import { PlusIcon } from "@yamada-ui/lucide";
 import {
   Box,
   Button,
@@ -11,11 +16,6 @@ import {
   VStack,
 } from "@yamada-ui/react";
 import { useState } from "react";
-import CreateTaskForm from "./TaskComponents/CreateTaskForm";
-import DeleteCompletedTasksDialog from "./TaskComponents/DeleteCompletedTasksDialog";
-import DeleteTaskDialog from "./TaskComponents/DeleteTaskDialog";
-import EditTaskModal from "./TaskComponents/EditTaskModal";
-import TaskItem from "./TaskComponents/TaskItem";
 
 interface TasksTabProps {
   tasks: Task[];
@@ -35,7 +35,7 @@ export default function TasksTab({
   onDeleteCompletedTasks,
 }: TasksTabProps) {
   const { open, onToggle } = useDisclosure(); // 新規タスクフォーム表示制御
-  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
   // 編集モーダルの状態
   const {
@@ -65,13 +65,13 @@ export default function TasksTab({
 
   // タスク編集モーダルを開く
   const handleEditTask = (task: Task) => {
-    setSelectedTaskId(task.id);
+    setSelectedTask(task);
     onEditModalOpen();
   };
 
   // 削除確認ダイアログを開く
-  const handleOpenDeleteDialog = (taskId: string) => {
-    setSelectedTaskId(taskId);
+  const handleOpenDeleteDialog = (task: Task) => {
+    setSelectedTask(task);
     onDeleteDialogOpen();
   };
 
@@ -80,8 +80,9 @@ export default function TasksTab({
     onToggle(); // フォームを閉じる
   };
 
-  const getSelectedTask = () => {
-    return tasks.find((task) => task.id === selectedTaskId) || null;
+  // 選択したタスクのIDを取得
+  const getSelectedTaskId = () => {
+    return selectedTask?.id || "";
   };
 
   return (
@@ -102,6 +103,8 @@ export default function TasksTab({
           <CreateTaskForm
             onSubmit={onCreateTask}
             onSuccess={handleCreateSuccess}
+            // 講義ページではlecture_idフィールドは不要（タスクは自動的に現在の講義に関連付けられる）
+            hideLectureField={true}
           />
         )}
       </Box>
@@ -146,7 +149,6 @@ export default function TasksTab({
                   size="xs"
                   colorScheme="red"
                   variant="outline"
-                  leftIcon={<TrashIcon />}
                   onClick={onDeleteCompletedDialogOpen}
                 >
                   完了タスクをすべて削除
@@ -162,16 +164,14 @@ export default function TasksTab({
         isOpen={isEditModalOpen}
         onClose={onEditModalClose}
         onSubmit={onUpdateTask}
-        task={getSelectedTask()}
-        taskId={selectedTaskId}
+        task={selectedTask}
+        hideLectureField={true} // 講義ページではlecture_idフィールドは不要
       />
 
       <DeleteTaskDialog
         isOpen={isDeleteDialogOpen}
         onClose={onDeleteDialogClose}
-        onDelete={() =>
-          selectedTaskId ? onDeleteTask(selectedTaskId) : Promise.resolve(false)
-        }
+        onDelete={() => onDeleteTask(getSelectedTaskId())}
       />
 
       <DeleteCompletedTasksDialog
@@ -206,7 +206,7 @@ interface TaskSectionProps {
   tasks: Task[];
   onUpdateStatus: (taskId: string, status: number) => Promise<void>;
   onEdit: (task: Task) => void;
-  onDelete: (taskId: string) => void;
+  onDelete: (task: Task) => void;
   extraHeader?: React.ReactNode;
 }
 
@@ -231,8 +231,9 @@ function TaskSection({
             key={task.id}
             task={task}
             onUpdateStatus={onUpdateStatus}
-            onEdit={() => onEdit(task)}
-            onDelete={() => onDelete(task.id)}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            showLecture={false} // 講義ページでは講義名を表示しない
           />
         ))}
       </VStack>
